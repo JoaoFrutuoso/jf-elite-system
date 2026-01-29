@@ -1,113 +1,89 @@
-<script>
-/**
- * CONFIGURAÇÃO (mude só isso)
- * Coloque a URL do seu Worker (sem barra no final).
- */
-const API_URL = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
-
-/**
- * Gera/pega um deviceId fixo do navegador (pra não ficar mudando).
- * Isso evita que o mesmo PC vire "outro dispositivo" a cada acesso.
- */
-function getDeviceId() {
-  const KEY = "jf_device_id";
-  let id = localStorage.getItem(KEY);
-  if (!id) {
-    id = "pc-" + crypto.randomUUID();
-    localStorage.setItem(KEY, id);
-  }
-  return id;
-}
-
-/**
- * Mostra erro se existir um elemento #erro (como no seu print),
- * senão usa alert().
- */
-function showError(msg) {
-  const el = document.getElementById("erro");
-  if (el) {
-    el.textContent = msg;
-    el.style.display = "block";
-  } else {
-    alert(msg);
-  }
-}
-
-/**
- * Esconde o erro se existir.
- */
-function hideError() {
-  const el = document.getElementById("erro");
-  if (el) el.style.display = "none";
-}
-
-/**
- * === FUNÇÃO PRINCIPAL ===
- * Essa função precisa existir porque o seu botão chama ela.
- * Ex: <button onclick="acessar()">Acessar</button>
- */
-async function acessar() {
-  hideError();
-
-  // pega e-mail do input id="email" (igual seu print)
-  const emailInput = document.getElementById("email");
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
-
-  // validação simples
-  if (!email || !email.includes("@")) {
-    showError("Digite um e-mail válido.");
-    return;
-  }
-
-  // usa o e-mail como "key" (você pode trocar isso depois, se quiser)
-  const key = email;
-
-  // deviceId fixo por navegador
-  const deviceId = getDeviceId();
-
-  // monta URL do Worker
-  const url = `${API_URL}/check?key=${encodeURIComponent(key)}&deviceId=${encodeURIComponent(deviceId)}`;
-
-  try {
-    const res = await fetch(url, { method: "GET" });
-
-    // Se der erro no Worker, tentamos ler texto pra te mostrar
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      showError(`Erro ao validar (HTTP ${res.status}). ${t}`);
-      return;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema JF Elite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-
-    // Worker pode responder texto simples ou JSON — vamos suportar os dois
-    const contentType = res.headers.get("content-type") || "";
-    let data;
-
-    if (contentType.includes("application/json")) {
-      data = await res.json();
-    } else {
-      const text = (await res.text()).trim();
-      // normaliza resposta texto
-      data = { status: text };
+    .box {
+      background: #161616;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
     }
-
-    // Ajuste aqui conforme seu Worker responde.
-    // Exemplos possíveis:
-    // - "ok"
-    // - "first_use"
-    // - "already_used_elsewhere"
-    // ou {status:"ok"} etc.
-    const status = (data.status || data.result || data.message || "").toString().trim();
-
-    if (status === "already_used_elsewhere") {
-      showError("Essa chave já foi usada em outro dispositivo.");
-      return;
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
     }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      background: #00c853;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .erro {
+      color: #ff5252;
+      margin-top: 10px;
+      display: none;
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
 
-    // Se passou, manda pra calculadora (app.html ou app.html?email=...)
-    // Pelo seu projeto, existe app.html no repositório.
-    window.location.href = `app.html?email=${encodeURIComponent(email)}`;
-  } catch (err) {
-    showError("Falha de rede ao validar. Verifique sua internet e tente novamente.");
-  }
-}
-</script>
+  <div class="box">
+    <h2>Sistema JF Elite</h2>
+    <p>Acesso ao sistema</p>
+
+    <input type="email" id="email" placeholder="Digite seu e-mail">
+    <button onclick="acessar()">Entrar</button>
+
+    <div id="erro" class="erro">E-mail inválido</div>
+
+    <footer>© João Frutuoso</footer>
+  </div>
+
+  <script>
+    function acessar() {
+      const email = document.getElementById("email").value;
+      const erro = document.getElementById("erro");
+
+      if (!email || !email.includes("@")) {
+        erro.style.display = "block";
+        return;
+      }
+
+      erro.style.display = "none";
+      alert("Acesso liberado (base). Próxima etapa: validação no servidor.");
+    }
+  </script>
+
+</body>
+</html>
