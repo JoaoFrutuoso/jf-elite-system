@@ -73,15 +73,15 @@
   </div>
 
   <div class="conteudo">
-    <div class="quadro">
-      <!-- 👇 AQUI você vai colocar o LINK DA SUA BALANÇA -->
-      <iframe src="COLE_AQUI_O_LINK_DA_SUA_BALANCA"></iframe>
-    </div>
-
-    <div class="aviso">
-      Se aparecer tela branca, o site da balança não permite iframe.
-      Aí a gente ajusta.
-    </div>
+    <script>
+  // Proteção básica: só entra se veio da tela de acesso
+  if (localStorage.getItem("mp_ok") !== "1") {
+    window.location.href = "index.html";
+  } else {
+    // Redireciona direto para a balança (Canva)
+    window.location.href = "https://macropesointeligente.my.canva.site/macropesointeligente";
+  }
+</script>
   </div>
 
   <script>
