@@ -1,1 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>JF Elite System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f0f0f;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #161616;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #00c853;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #00b248;
+    }
+
+    .erro {
+      color: #ff5252;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .rodape {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>JF Elite System</h1>
+    <p>Acesso exclusivo para alunos</p>
+
+    <input type="email" id="email" placeholder="Digite seu e-mail de compra" />
+    <button onclick="acessar()">Acessar</button>
+
+    <div class="erro" id="erro">
+      Digite um e-mail válido.
+    </div>
+
+    <div class="rodape">
+      © João Frutuoso
+    </div>
+  </div>
+
+  <script>
+    function acessar() {
+      const email = document.getElementById("email").value;
+      const erro = document.getElementById("erro");
+
+      if (!email || !email.includes("@")) {
+        erro.style.display = "block";
+        return;
+      }
+
+      erro.style.display = "none";
+
+      // 🔒 FASE 2:
+      // aqui depois vamos validar:
+      // - se o e-mail comprou
+      // - registrar dispositivo
+      // - bloquear compartilhamento
+
+      // 🚀 POR ENQUANTO: libera acesso direto
+      window.location.href = "https://SEU-LINK-DA-CALCULADORA-AQUI";
+    }
+  </script>
+
+</body>
+</html>
