@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -64,7 +65,9 @@
       cursor: pointer;
     }
 
-    button:hover { background: #00b248; }
+    button:hover {
+      background: #00b248;
+    }
 
     .erro {
       margin-top: 12px;
@@ -94,16 +97,15 @@
     <h1>Macropeso Inteligente</h1>
     <p>Acesso exclusivo</p>
 
-    <!-- ✅ FORM: Enter funciona e NÃO recarrega a página -->
-    <form id="loginForm" autocomplete="on">
+    <form id="loginForm">
       <input
         type="email"
         id="email"
         placeholder="Digite seu e-mail"
         autocomplete="email"
-      />
+      >
 
-      <button id="btnEntrar" type="submit">Entrar</button>
+      <button type="submit">Entrar</button>
 
       <div id="erro" class="erro"></div>
       <div id="ok" class="ok"></div>
@@ -113,62 +115,53 @@
   </div>
 
   <script>
-    // 🔒 E-MAILS LIBERADOS (VITALÍCIO / TESTE)
+    // 🔒 E-MAILS LIBERADOS
     const EMAILS_LIBERADOS = [
       "jlucasandradeee@gmail.com",
       "teixeiraamanda93@gmail.com"
-    ].map(e => e.trim().toLowerCase());
+    ].map(e => e.toLowerCase());
 
+    // 🎯 LINK DA CALCULADORA (CANVA)
+    const LINK_CALCULADORA =
+      "https://macropesointeligente.my.canva.site/macropesointeligente";
+
+    const form = document.getElementById("loginForm");
+    const inputEmail = document.getElementById("email");
     const erro = document.getElementById("erro");
     const ok = document.getElementById("ok");
-    const btn = document.getElementById("btnEntrar");
-    const inputEmail = document.getElementById("email");
-    const form = document.getElementById("loginForm");
 
-    // ✅ Mantém o e-mail preenchido (pra não “sumir”)
-    const saved = localStorage.getItem("mp_email_last");
-    if (saved) inputEmail.value = saved;
-
-    function showErro(msg){
+    function mostrarErro(msg) {
       ok.style.display = "none";
       erro.textContent = msg;
       erro.style.display = "block";
     }
 
-    function showOk(msg){
+    function mostrarOk(msg) {
       erro.style.display = "none";
       ok.textContent = msg;
       ok.style.display = "block";
     }
 
-    function validarEmail(email){
-      return email && email.includes("@") && email.includes(".");
-    }
-
-    function acessar() {
-      const emailDigitado = (inputEmail.value || "").trim().toLowerCase();
-      localStorage.setItem("mp_email_last", emailDigitado);
-
-      if (!validarEmail(emailDigitado)) {
-        showErro("Digite um e-mail válido.");
-        return;
-      }
-
-      if (!EMAILS_LIBERADOS.includes(emailDigitado)) {
-        showErro("Acesso negado. Este e-mail não está autorizado.");
-        return;
-      }
-
-      showOk("Acesso liberado. Entrando…");
-
-      // ✅ redireciona para a calculadora (mesmo projeto)
-      window.location.assign("./app.html");
-    }
-
-    // ✅ ENTER + botão: sempre chama acessar() e NÃO recarrega
-    form.addEventListener("submit", function(e){
+    form.addEventListener("submit", function (e) {
       e.preventDefault();
-      acessar();
+
+      const email = inputEmail.value.trim().toLowerCase();
+
+      if (!email || !email.includes("@")) {
+        mostrarErro("Digite um e-mail válido.");
+        return;
+      }
+
+      if (!EMAILS_LIBERADOS.includes(email)) {
+        mostrarErro("Acesso negado. Este e-mail não está autorizado.");
+        return;
+      }
+
+      mostrarOk("Acesso liberado. Entrando…");
+
+      setTimeout(() => {
+        window.location.href = LINK_CALCULADORA;
+      }, 300);
     });
   </script>
 
