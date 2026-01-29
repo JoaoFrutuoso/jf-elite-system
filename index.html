@@ -64,13 +64,18 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #00b248;
-    }
+    button:hover { background: #00b248; }
 
     .erro {
       margin-top: 12px;
       color: #ff5252;
+      font-size: 14px;
+      display: none;
+    }
+
+    .ok {
+      margin-top: 12px;
+      color: #9fffbf;
       font-size: 14px;
       display: none;
     }
@@ -89,56 +94,82 @@
     <h1>Macropeso Inteligente</h1>
     <p>Acesso exclusivo</p>
 
-    <input
-      type="email"
-      id="email"
-      placeholder="Digite seu e-mail"
-      autocomplete="email"
-    >
+    <!-- ✅ FORM: Enter funciona e NÃO recarrega a página -->
+    <form id="loginForm" autocomplete="on">
+      <input
+        type="email"
+        id="email"
+        placeholder="Digite seu e-mail"
+        autocomplete="email"
+      />
 
-    <button onclick="acessar()">Entrar</button>
+      <button id="btnEntrar" type="submit">Entrar</button>
 
-    <div id="erro" class="erro"></div>
+      <div id="erro" class="erro"></div>
+      <div id="ok" class="ok"></div>
+    </form>
 
     <footer>© João Frutuoso</footer>
   </div>
 
   <script>
-    function acessar() {
-      const emailDigitado = document
-        .getElementById("email")
-        .value
-        .trim()
-        .toLowerCase();
+    // 🔒 E-MAILS LIBERADOS (VITALÍCIO / TESTE)
+    const EMAILS_LIBERADOS = [
+      "jlucasandradeee@gmail.com",
+      "teixeiraamanda93@gmail.com"
+    ].map(e => e.trim().toLowerCase());
 
-      const erro = document.getElementById("erro");
+    const erro = document.getElementById("erro");
+    const ok = document.getElementById("ok");
+    const btn = document.getElementById("btnEntrar");
+    const inputEmail = document.getElementById("email");
+    const form = document.getElementById("loginForm");
 
-      // 🔒 E-MAILS LIBERADOS (VITALÍCIO / TESTE)
-      const EMAILS_LIBERADOS = [
-        "jlucasandradeee@gmail.com",
-        "teixeiraamanda93@gmail.com"
-      ];
+    // ✅ Mantém o e-mail preenchido (pra não “sumir”)
+    const saved = localStorage.getItem("mp_email_last");
+    if (saved) inputEmail.value = saved;
 
-      // validação básica
-      if (!emailDigitado || !emailDigitado.includes("@")) {
-        erro.textContent = "Digite um e-mail válido.";
-        erro.style.display = "block";
-        return;
-      }
-
-      // bloqueia quem não estiver na lista
-      if (!EMAILS_LIBERADOS.includes(emailDigitado)) {
-        erro.textContent = "Acesso negado. Este e-mail não está autorizado.";
-        erro.style.display = "block";
-        return;
-      }
-
-      // se chegou aqui, está liberado
-      erro.style.display = "none";
-
-      // redireciona para a calculadora
-      window.location.href = "app.html";
+    function showErro(msg){
+      ok.style.display = "none";
+      erro.textContent = msg;
+      erro.style.display = "block";
     }
+
+    function showOk(msg){
+      erro.style.display = "none";
+      ok.textContent = msg;
+      ok.style.display = "block";
+    }
+
+    function validarEmail(email){
+      return email && email.includes("@") && email.includes(".");
+    }
+
+    function acessar() {
+      const emailDigitado = (inputEmail.value || "").trim().toLowerCase();
+      localStorage.setItem("mp_email_last", emailDigitado);
+
+      if (!validarEmail(emailDigitado)) {
+        showErro("Digite um e-mail válido.");
+        return;
+      }
+
+      if (!EMAILS_LIBERADOS.includes(emailDigitado)) {
+        showErro("Acesso negado. Este e-mail não está autorizado.");
+        return;
+      }
+
+      showOk("Acesso liberado. Entrando…");
+
+      // ✅ redireciona para a calculadora (mesmo projeto)
+      window.location.assign("./app.html");
+    }
+
+    // ✅ ENTER + botão: sempre chama acessar() e NÃO recarrega
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      acessar();
+    });
   </script>
 
 </body>
