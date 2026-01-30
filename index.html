@@ -1,107 +1,92 @@
-<!doctype html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sistema JF Elite</title>
-  <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#0b0b0b; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; }
-    #loginCard { width:min(520px, 92vw); background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:26px; }
-    h1 { margin:0 0 8px 0; font-size:42px; letter-spacing:.5px; }
-    .sub { opacity:.85; margin-bottom:16px; }
-    input { width:100%; box-sizing:border-box; font-size:20px; padding:14px 16px; border-radius:10px; border:1px solid #ccc; outline:none; }
-    button { width:100%; margin-top:12px; font-size:22px; padding:14px 16px; border-radius:10px; border:none; cursor:pointer; background:#21c45a; color:#061b0d; font-weight:700; }
-    button:disabled { opacity:.6; cursor:not-allowed; }
-    #msg { margin-top:12px; min-height:24px; font-size:18px; }
-    .ok { color:#78ffb0; }
-    .err { color:#ff4b4b; }
-    .tiny { font-size:12px; opacity:.6; margin-top:10px; }
-  </style>
-</head>
-<body>
-  <div id="loginCard">
-    <h1>Sistema JF Elite</h1>
-    <div class="sub">Acesso à calculadora</div>
+<script>
+  const WORKER_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
+  const ACCESS_URL = WORKER_BASE + "/access";
 
-    <form id="loginForm">
-      <input id="keyInput" type="text" placeholder="Digite seu e-mail ou código" autocomplete="email" />
-      <button id="btn" type="submit">Entrar</button>
-    </form>
+  // ✅ coloque aqui pra onde vai depois que liberar
+  const APP_URL = "./app.html";
+  // const APP_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
 
-    <div id="msg"></div>
-    <div class="tiny">Se você comprou e não liberou, aguarde 1-2 minutos e tente de novo.</div>
-  </div>
+  function getDeviceId() {
+    let id = localStorage.getItem("jf_device_id");
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : ("id-" + Math.random().toString(16).slice(2) + Date.now()));
+      localStorage.setItem("jf_device_id", id);
+    }
+    return id;
+  }
 
-  <script>
-    // ✅ SEU WORKER (base)
-    const API_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
-
-    const form = document.getElementById("loginForm");
-    const input = document.getElementById("keyInput");
-    const btn = document.getElementById("btn");
+  async function doLogin() {
+    const input = document.getElementById("emailInput");
     const msg = document.getElementById("msg");
 
-    function getDeviceId() {
-      const k = "jf_device_id";
-      let id = localStorage.getItem(k);
-      if (!id) {
-        id = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-        localStorage.setItem(k, id);
-      }
-      return id;
+    const login = (input.value || "").trim();
+    if (!login) {
+      msg.textContent = "Digite seu e-mail ou código.";
+      msg.style.color = "#ff3b3b";
+      return;
     }
 
-    function setMsg(text, ok=false) {
-      msg.className = ok ? "ok" : "err";
-      msg.textContent = text || "";
-    }
+    msg.textContent = "Validando acesso...";
+    msg.style.color = "#ffffff";
 
-    async function doLogin(key) {
-      setMsg("");
-      btn.disabled = true;
-      btn.textContent = "Entrando...";
+    try {
+      const r = await fetch(ACCESS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          login,
+          deviceId: getDeviceId()
+        })
+      });
 
-      try {
-        const res = await fetch(API_BASE + "/access", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ key, deviceId: getDeviceId() })
-        });
+      const data = await r.json().catch(() => ({}));
 
-        const data = await res.json().catch(() => ({}));
+      if (data && data.ok) {
+        msg.textContent = "Acesso liberado. Entrando...";
+        msg.style.color = "#00ff88";
 
-        if (!data || !data.ok) {
-          const e = (data && (data.msg || data.error)) ? (data.msg || data.error) : "Erro de conexão.";
-          throw new Error(e);
-        }
+        // salva login
+        localStorage.setItem("jf_login", login.toLowerCase());
 
-        // salva sessão simples
-        localStorage.setItem("jf_access_ok", "1");
-        localStorage.setItem("jf_access_exp", String(data.exp || ""));
-        localStorage.setItem("jf_access_mode", String(data.mode || ""));
-        localStorage.setItem("jf_access_key_last", key);
-
-        setMsg(data.msg || "Acesso liberado. Entrando...", true);
-
-        // redireciona
+        // entra
         setTimeout(() => {
-          window.location.href = "./app.html";
-        }, 250);
-
-      } catch (err) {
-        setMsg(String(err.message || "Erro de conexão."));
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Entrar";
+          window.location.href = APP_URL;
+        }, 400);
+        return;
       }
-    }
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const key = (input.value || "").trim();
-      if (!key) return setMsg("Digite seu e-mail ou código.");
-      doLogin(key);
-    });
-  </script>
-</body>
-</html>
+      // mensagens amigáveis
+      const err = data?.error || "not_allowed";
+      const map = {
+        not_allowed: "Acesso não liberado para este login.",
+        expired: "Seu acesso expirou.",
+        revoked: "Acesso cancelado (reembolso/chargeback).",
+        promo_expired: "Código de blogueiro expirou.",
+        promo_limit_reached: "Código de blogueiro atingiu o limite de 15 acessos.",
+        invalid_login: "Login inválido. Use e-mail ou código.",
+        missing_login_or_device: "Erro interno (faltou login/device)."
+      };
+
+      msg.textContent = map[err] || ("Erro: " + err);
+      msg.style.color = "#ff3b3b";
+    } catch (e) {
+      // Esse é o "Failed to fetch"
+      msg.textContent = "Erro de conexão (failed to fetch). Verifique o Worker / CORS.";
+      msg.style.color = "#ff3b3b";
+    }
+  }
+
+  // botão
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("btnEnter");
+    const input = document.getElementById("emailInput");
+
+    if (btn) btn.addEventListener("click", doLogin);
+
+    if (input) {
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") doLogin();
+      });
+    }
+  });
+</script>
