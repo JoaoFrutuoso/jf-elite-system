@@ -1,92 +1,204 @@
-<script>
-  const WORKER_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
-  const ACCESS_URL = WORKER_BASE + "/access";
-
-  // ✅ coloque aqui pra onde vai depois que liberar
-  const APP_URL = "./app.html";
-  // const APP_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
-
-  function getDeviceId() {
-    let id = localStorage.getItem("jf_device_id");
-    if (!id) {
-      id = (crypto.randomUUID ? crypto.randomUUID() : ("id-" + Math.random().toString(16).slice(2) + Date.now()));
-      localStorage.setItem("jf_device_id", id);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Macropeso Inteligente</title>
+  <style>
+    :root{
+      --bg:#0f0f0f;
+      --card:#161616;
+      --text:#ffffff;
+      --muted:#bdbdbd;
+      --green:#00c853;
+      --green2:#00a845;
+      --red:#ff5252;
+      --border:#2a2a2a;
     }
-    return id;
-  }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:var(--bg);
+      color:var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      padding:24px;
+    }
+    .card{
+      width:100%;
+      max-width:420px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:26px;
+      box-shadow:0 0 30px rgba(0,0,0,.55);
+    }
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.4}
+    label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px}
+    input{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#0e0e0e;
+      color:var(--text);
+      outline:none;
+      font-size:15px;
+    }
+    input:focus{border-color:#3a3a3a}
+    button{
+      width:100%;
+      margin-top:14px;
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      background:var(--green);
+      color:#000;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      transition:.15s;
+    }
+    button:hover{background:var(--green2)}
+    .msg{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:10px;
+      font-size:14px;
+      border:1px solid transparent;
+      display:none;
+      white-space:pre-line;
+    }
+    .msg.ok{
+      display:block;
+      background:rgba(0,200,83,.10);
+      border-color:rgba(0,200,83,.30);
+      color:#d7ffe5;
+    }
+    .msg.err{
+      display:block;
+      background:rgba(255,82,82,.12);
+      border-color:rgba(255,82,82,.35);
+      color:#ffd2d2;
+    }
+    .mini{
+      margin-top:10px;
+      color:#9e9e9e;
+      font-size:12px;
+      line-height:1.4;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#101010;
+      color:#cfcfcf;
+      font-size:12px;
+      margin-top:10px;
+    }
+    .rodape{margin-top:16px;text-align:center;color:#7a7a7a;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="card" id="loginCard">
+    <h1>Macropeso Inteligente</h1>
+    <p>Acesso exclusivo. Digite seu <b>e-mail de compra</b> ou o <b>código</b>.</p>
 
-  async function doLogin() {
-    const input = document.getElementById("emailInput");
-    const msg = document.getElementById("msg");
+    <label for="login">E-mail ou Código</label>
+    <input id="login" type="text" placeholder="ex: seunome@email.com ou 33joao33" autocomplete="username"/>
 
-    const login = (input.value || "").trim();
-    if (!login) {
-      msg.textContent = "Digite seu e-mail ou código.";
-      msg.style.color = "#ff3b3b";
-      return;
+    <button id="btn" type="button">Entrar</button>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="mini">
+      <span class="badge">Dica</span><br/>
+      Blogueiros: use o código <b>33joao33</b> (limitado).
+    </div>
+
+    <div class="rodape">© João Frutuoso</div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const WORKER_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
+    const ACCESS_URL  = WORKER_BASE + "/access";
+
+    // Para onde vai quando liberar:
+    const CALCULADORA_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
+
+    // ====== HELPERS ======
+    function getDeviceId(){
+      let id = localStorage.getItem("mp_device_id");
+      if(!id){
+        id = (crypto.randomUUID ? crypto.randomUUID() : ("dev-" + Math.random().toString(16).slice(2) + Date.now()));
+        localStorage.setItem("mp_device_id", id);
+      }
+      return id;
     }
 
-    msg.textContent = "Validando acesso...";
-    msg.style.color = "#ffffff";
+    function setMsg(type, text){
+      const el = document.getElementById("msg");
+      el.className = "msg " + (type === "ok" ? "ok" : "err");
+      el.textContent = text;
+    }
 
-    try {
-      const r = await fetch(ACCESS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          login,
-          deviceId: getDeviceId()
-        })
-      });
+    async function entrar(){
+      const input = document.getElementById("login");
+      const login = (input.value || "").trim();
 
-      const data = await r.json().catch(() => ({}));
-
-      if (data && data.ok) {
-        msg.textContent = "Acesso liberado. Entrando...";
-        msg.style.color = "#00ff88";
-
-        // salva login
-        localStorage.setItem("jf_login", login.toLowerCase());
-
-        // entra
-        setTimeout(() => {
-          window.location.href = APP_URL;
-        }, 400);
+      if(!login){
+        setMsg("err","Digite seu e-mail ou código.");
         return;
       }
 
-      // mensagens amigáveis
-      const err = data?.error || "not_allowed";
-      const map = {
-        not_allowed: "Acesso não liberado para este login.",
-        expired: "Seu acesso expirou.",
-        revoked: "Acesso cancelado (reembolso/chargeback).",
-        promo_expired: "Código de blogueiro expirou.",
-        promo_limit_reached: "Código de blogueiro atingiu o limite de 15 acessos.",
-        invalid_login: "Login inválido. Use e-mail ou código.",
-        missing_login_or_device: "Erro interno (faltou login/device)."
-      };
+      setMsg("ok","Validando acesso...");
 
-      msg.textContent = map[err] || ("Erro: " + err);
-      msg.style.color = "#ff3b3b";
-    } catch (e) {
-      // Esse é o "Failed to fetch"
-      msg.textContent = "Erro de conexão (failed to fetch). Verifique o Worker / CORS.";
-      msg.style.color = "#ff3b3b";
+      try{
+        const r = await fetch(ACCESS_URL,{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({
+            login,
+            deviceId: getDeviceId()
+          })
+        });
+
+        const data = await r.json();
+
+        if(data && data.ok){
+          setMsg("ok","Acesso liberado. Entrando...");
+          setTimeout(()=>{ window.location.href = CALCULADORA_URL; }, 350);
+          return;
+        }
+
+        const err = (data && data.error) ? data.error : "not_allowed";
+        const mapa = {
+          not_allowed: "Acesso não liberado para este login.",
+          expired: "Seu acesso expirou.",
+          revoked: "Acesso cancelado (reembolso/chargeback/cancelamento).",
+          promo_expired: "Código de blogueiro expirou.",
+          promo_limit_reached: "Código de blogueiro atingiu o limite de 15 acessos.",
+          invalid_login: "Login inválido. Use e-mail ou código.",
+          missing_login_or_device: "Erro interno (faltou login/device)."
+        };
+        setMsg("err", mapa[err] || ("Erro: " + err));
+      }catch(e){
+        // Se isso aparecer: é CORS/rota errada. O Worker abaixo resolve.
+        setMsg("err","Erro de conexão (failed to fetch). Verifique se o Worker foi implantado corretamente.");
+      }
     }
-  }
 
-  // botão
-  document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("btnEnter");
-    const input = document.getElementById("emailInput");
-
-    if (btn) btn.addEventListener("click", doLogin);
-
-    if (input) {
-      input.addEventListener("keydown", (ev) => {
-        if (ev.key === "Enter") doLogin();
-      });
-    }
-  });
-</script>
+    // liga botão + Enter
+    document.getElementById("btn").addEventListener("click", entrar);
+    document.getElementById("login").addEventListener("keydown",(ev)=>{
+      if(ev.key==="Enter") entrar();
+    });
+  </script>
+</body>
+</html>
