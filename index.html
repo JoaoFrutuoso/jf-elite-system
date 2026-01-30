@@ -1,95 +1,171 @@
-<!-- ✅ LOGIN (substitua o seu bloco por este) -->
-<div id="loginCard" style="max-width:520px;margin:60px auto;padding:28px;border-radius:18px;background:#0b0b0be6;border:1px solid #2b2b2b;box-shadow:0 10px 30px rgba(0,0,0,.35);">
-  <h1 style="margin:0;color:#fff;font-size:44px;font-weight:800;letter-spacing:.5px;">Sistema JF Elite</h1>
-  <p style="margin:8px 0 18px;color:#cfcfcf;">Acesso à calculadora</p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sistema JF Elite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- IMPORTANTE: form evita bug do Enter, e a gente bloqueia o reload no JS -->
-  <form id="loginForm" autocomplete="off">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: #0b0b0b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #loginCard {
+      width: 100%;
+      max-width: 420px;
+      background: #121212;
+      padding: 32px;
+      border-radius: 14px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+
+    h1 {
+      color: #ffffff;
+      margin-bottom: 8px;
+      font-size: 26px;
+    }
+
+    p {
+      color: #9ca3af;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #22c55e;
+      color: #000;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #msg {
+      margin-top: 14px;
+      font-size: 14px;
+      min-height: 18px;
+    }
+
+    .error {
+      color: #ef4444;
+    }
+
+    .success {
+      color: #22c55e;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loginCard">
+    <h1>Sistema JF Elite</h1>
+    <p>Acesso à calculadora</p>
+
     <input
       id="accessInput"
       type="text"
-      inputmode="email"
       placeholder="Digite seu e-mail ou código"
-      style="width:100%;height:58px;border-radius:12px;border:2px solid #3a3a3a;padding:0 14px;font-size:18px;outline:none;"
+      autocomplete="off"
     />
 
-    <button
-      id="enterBtn"
-      type="submit"
-      style="width:100%;height:62px;margin-top:14px;border-radius:12px;border:none;background:#19c150;color:#0b0b0b;font-size:20px;font-weight:800;cursor:pointer;"
-    >
-      Entrar
-    </button>
+    <button id="loginBtn">Entrar</button>
 
-    <div id="loginMsg" style="margin-top:14px;min-height:22px;color:#fff;font-size:15px;"></div>
-  </form>
-</div>
+    <div id="msg"></div>
+  </div>
 
-<script>
-  // ✅ CONFIG (ajuste se seu endpoint de validação for outro)
-  const API_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
+  <script>
+    const input = document.getElementById("accessInput");
+    const button = document.getElementById("loginBtn");
+    const msg = document.getElementById("msg");
 
-  const form = document.getElementById("loginForm");
-  const input = document.getElementById("accessInput");
-  const btn = document.getElementById("enterBtn");
-  const msg = document.getElementById("loginMsg");
+    async function entrar() {
+      const value = input.value.trim();
 
-  function setMsg(text, ok=false) {
-    msg.textContent = text;
-    msg.style.color = ok ? "#31ff7a" : "#ff5a5a";
-  }
-
-  async function tryLogin() {
-    const raw = (input.value || "").trim();
-    if (!raw) {
-      setMsg("Digite seu e-mail ou código.");
-      return;
-    }
-
-    btn.disabled = true;
-    btn.style.opacity = "0.85";
-    setMsg("Validando acesso...");
-
-    try {
-      // 🔥 Se no seu Worker a rota for /access, fica assim:
-      const url = `${API_BASE}/access?key=${encodeURIComponent(raw)}`;
-
-      const r = await fetch(url, { method: "GET" });
-      const data = await r.json().catch(() => ({}));
-
-      if (!r.ok || !data || data.ok !== true) {
-        const reason = data?.reason || data?.error || "Acesso negado.";
-        setMsg(reason);
-        btn.disabled = false;
-        btn.style.opacity = "1";
+      if (!value) {
+        msg.textContent = "Digite um e-mail ou código.";
+        msg.className = "error";
         return;
       }
 
-      // ✅ salvando sessão simples
-      localStorage.setItem("jf_access", "1");
-      localStorage.setItem("jf_access_key", raw);
+      button.disabled = true;
+      msg.textContent = "Verificando acesso...";
+      msg.className = "";
 
-      setMsg("Acesso liberado! Entrando...", true);
+      try {
+        const response = await fetch(
+          "https://rough-base-6eb1.jlucasandradeee.workers.dev/access",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              value: value
+            })
+          }
+        );
 
-      // ✅ redireciona para a calculadora
-      window.location.href = "./app.html";
+        const data = await response.json();
 
-    } catch (e) {
-      setMsg("Erro ao conectar com o servidor. Verifique o Worker/URL.");
-      btn.disabled = false;
-      btn.style.opacity = "1";
+        if (data.ok) {
+          msg.textContent = "Acesso liberado. Entrando...";
+          msg.className = "success";
+
+          setTimeout(() => {
+            window.location.href = "app.html";
+          }, 800);
+        } else {
+          msg.textContent = data.error || "Acesso negado.";
+          msg.className = "error";
+          button.disabled = false;
+        }
+
+      } catch (err) {
+        msg.textContent = "Erro de conexão.";
+        msg.className = "error";
+        button.disabled = false;
+      }
     }
-  }
 
-  // ✅ Clique no botão e Enter funcionam
-  form.addEventListener("submit", (ev) => {
-    ev.preventDefault(); // <<< ISSO evita o reload que faz o “sumir”
-    tryLogin();
-  });
+    button.addEventListener("click", entrar);
 
-  // ✅ garante que clique funciona mesmo se algo atrapalhar
-  btn.addEventListener("click", (ev) => {
-    ev.preventDefault();
-    tryLogin();
-  });
-</script>
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        entrar();
+      }
+    });
+  </script>
+
+</body>
+</html>
