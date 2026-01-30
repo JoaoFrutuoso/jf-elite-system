@@ -1,222 +1,301 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Macropeso Inteligente</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
 
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #0f0f0f;
-      color: #ffffff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background: #161616;
-      padding: 30px;
-      border-radius: 14px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      box-shadow: 0 0 30px rgba(0,0,0,0.6);
-      border: 1px solid #2a2a2a;
-    }
-    h1 { font-size: 22px; margin-bottom: 8px; }
-    p { font-size: 14px; color: #bdbdbd; margin-bottom: 20px; }
+    // ========= CONFIG =========
+    const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #2a2a2a;
-      background: #0e0e0e;
-      color: #fff;
-      outline: none;
-      font-size: 16px;
-      margin-bottom: 15px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-      font-weight: bold;
-      background: #00c853;
-      color: #000;
-      cursor: pointer;
-    }
-    button:hover { background: #00b248; }
-    button:disabled { opacity: .6; cursor: not-allowed; }
-
-    .erro {
-      margin-top: 12px;
-      color: #ff5252;
-      font-size: 14px;
-      display: none;
-      text-align: left;
-    }
-    .ok {
-      margin-top: 12px;
-      color: #9fffbf;
-      font-size: 14px;
-      display: none;
-      text-align: left;
-    }
-
-    footer { margin-top: 20px; font-size: 12px; color: #777; }
-  </style>
-</head>
-
-<body>
-
-  <div class="container">
-    <h1>Macropeso Inteligente</h1>
-    <p>Acesso exclusivo</p>
-
-    <form id="loginForm">
-      <input
-        type="email"
-        id="email"
-        placeholder="Digite seu e-mail"
-        autocomplete="email"
-      >
-
-      <button id="btnEntrar" type="submit">Entrar</button>
-
-      <div id="erro" class="erro"></div>
-      <div id="ok" class="ok"></div>
-    </form>
-
-    <footer>© João Frutuoso</footer>
-  </div>
-
-  <script>
-    // ✅ 1) E-mails vitalícios (sempre entram)
-    const EMAILS_VITALICIOS = [
+    // Seus e-mails FULL (sempre entram, não expiram, não revogam)
+    const FULL_EMAILS = new Set([
+      "teixeiraamanda93@gmail.com",
       "jlucasandradeee@gmail.com",
-      "teixeiraamanda93@gmail.com"
-    ].map(e => e.trim().toLowerCase());
+    ]);
 
-    // ✅ 2) Seu Worker (Cloudflare)
-    const API_URL = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
+    // Código do blogueiro (ETERN0) — 15 acessos simultâneos, cada um dura 3 meses
+    const PROMO_CODE = "33joao33";
+    const PROMO_LIMIT = 15;
+    const PROMO_DURATION_DAYS = 90; // ~3 meses
+    const PROMO_DURATION_MS = PROMO_DURATION_DAYS * 24 * 60 * 60 * 1000;
 
-    // ✅ 3) Link da calculadora (Canva)
-    const LINK_CALCULADORA = "https://macropesointeligente.my.canva.site/macropesointeligente";
+    // ========= HELPERS =========
+    const now = () => Date.now();
+    const normalizeEmail = (e) => String(e || "").trim().toLowerCase();
+    const normalizeCode = (c) => String(c || "").trim().toLowerCase();
 
-    const form = document.getElementById("loginForm");
-    const inputEmail = document.getElementById("email");
-    const erro = document.getElementById("erro");
-    const ok = document.getElementById("ok");
-    const btn = document.getElementById("btnEntrar");
+    const json = (obj, status = 200) =>
+      new Response(JSON.stringify(obj, null, 2), {
+        status,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "access-control-allow-origin": "*",
+        },
+      });
 
-    function mostrarErro(msg) {
-      ok.style.display = "none";
-      erro.textContent = msg;
-      erro.style.display = "block";
+    // CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET,POST,OPTIONS",
+          "access-control-allow-headers": "content-type,authorization",
+        },
+      });
     }
 
-    function mostrarOk(msg) {
-      erro.style.display = "none";
-      ok.textContent = msg;
-      ok.style.display = "block";
+    async function kvGet(key) {
+      const raw = await env.CHAVES_KV.get(key);
+      return raw ? JSON.parse(raw) : null;
+    }
+    async function kvPut(key, val) {
+      await env.CHAVES_KV.put(key, JSON.stringify(val));
+    }
+    async function kvDel(key) {
+      await env.CHAVES_KV.delete(key);
     }
 
-    function validarEmail(email) {
-      return email && email.includes("@") && email.includes(".");
+    function isActive(rec) {
+      if (!rec) return false;
+      if (rec.revoked) return false;
+      if (!rec.expiresAt) return false;
+      return now() < rec.expiresAt;
     }
 
-    function getDeviceId() {
-      const KEY = "mp_device_id";
-      let id = localStorage.getItem(KEY);
-      if (!id) {
-        id = "dev-" + (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-        localStorage.setItem(KEY, id);
-      }
-      return id;
+    // ========= ROUTES =========
+
+    // Saúde
+    if (url.pathname === "/ping") {
+      return json({ ok: true, msg: "Worker ativo" });
     }
 
-    function entrarNaCalculadora(email) {
-      // opcional: guardar e-mail do último login
-      localStorage.setItem("mp_last_email", email);
-      mostrarOk("Acesso liberado. Entrando…");
-      setTimeout(() => {
-        window.location.href = LINK_CALCULADORA;
-      }, 250);
-    }
+    // ========= ACESSO POR EMAIL (compradores) =========
+    // GET /access?email=...
+    if (request.method === "GET" && url.pathname === "/access") {
+      const email = normalizeEmail(url.searchParams.get("email"));
+      if (!email) return json({ ok: false, error: "missing_email" }, 400);
 
-    async function validarNoWorker(email) {
-      const deviceId = getDeviceId();
-      const url = `${API_URL}/check?key=${encodeURIComponent(email)}&deviceId=${encodeURIComponent(deviceId)}`;
-
-      const res = await fetch(url, { method: "GET" });
-
-      // Worker pode retornar texto ou JSON; vamos aceitar ambos.
-      const ct = (res.headers.get("content-type") || "").toLowerCase();
-      let status = "";
-
-      if (ct.includes("application/json")) {
-        const data = await res.json();
-        status = String(data.status || "").trim();
-      } else {
-        status = String(await res.text()).trim();
-      }
-
-      return status;
-    }
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      btn.disabled = true;
-
-      const email = (inputEmail.value || "").trim().toLowerCase();
-
-      if (!validarEmail(email)) {
-        mostrarErro("Digite um e-mail válido.");
-        btn.disabled = false;
-        return;
+      // FULL emails sempre entram
+      if (FULL_EMAILS.has(email)) {
+        return json({
+          ok: true,
+          email,
+          reason: "full_email",
+          expiresAt: 4102444800000, // 2100-01-01
+        });
       }
 
-      // ✅ Vitalício entra direto
-      if (EMAILS_VITALICIOS.includes(email)) {
-        entrarNaCalculadora(email);
-        return;
+      const rec = await kvGet(`email:${email}`);
+      return json({
+        ok: isActive(rec),
+        email,
+        reason: !rec
+          ? "not_found"
+          : rec.revoked
+          ? "revoked"
+          : now() >= rec.expiresAt
+          ? "expired"
+          : "active",
+        expiresAt: rec?.expiresAt || null,
+      });
+    }
+
+    // (Opcional) debug
+    if (request.method === "GET" && url.pathname === "/debug") {
+      const email = normalizeEmail(url.searchParams.get("email"));
+      if (!email) return json({ ok: false, error: "missing_email" }, 400);
+      const rec = await kvGet(`email:${email}`);
+      return json({
+        ok: true,
+        email,
+        full: FULL_EMAILS.has(email),
+        record: rec,
+        active: FULL_EMAILS.has(email) ? true : isActive(rec),
+      });
+    }
+
+    // ========= WEBHOOK KIWIFY =========
+    // POST /kiwify
+    if (request.method === "POST" && url.pathname === "/kiwify") {
+      // Segurança: token do webhook (coloque em Secrets como KIWI_TOKEN)
+      const auth = request.headers.get("authorization") || "";
+      const tokenOk =
+        env.KIWI_TOKEN &&
+        (auth === `Bearer ${env.KIWI_TOKEN}` || auth === env.KIWI_TOKEN);
+
+      if (!tokenOk) {
+        return json({ ok: false, error: "unauthorized_webhook" }, 401);
       }
 
-      // 🔒 Outros: valida no Worker
+      let body;
       try {
-        mostrarOk("Validando seu acesso…");
-
-        const status = await validarNoWorker(email);
-
-        if (status === "ok" || status === "first_use") {
-          entrarNaCalculadora(email);
-          return;
-        }
-
-        if (status === "already_used_elsewhere") {
-          mostrarErro("Esse acesso já foi usado em outro dispositivo.");
-          btn.disabled = false;
-          return;
-        }
-
-        // Qualquer retorno diferente = não liberado
-        mostrarErro("Acesso não liberado. Confirme se a compra foi aprovada.");
-        btn.disabled = false;
-
-      } catch (err) {
-        mostrarErro("Falha ao validar (internet/servidor). Tente novamente.");
-        btn.disabled = false;
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: "invalid_json" }, 400);
       }
-    });
-  </script>
 
-</body>
-</html>
+      // e-mail do comprador (a Kiwify pode mandar em lugares diferentes)
+      const email = normalizeEmail(
+        body?.customer?.email ||
+          body?.buyer?.email ||
+          body?.data?.customer?.email ||
+          body?.data?.buyer?.email ||
+          body?.email
+      );
+      if (!email) return json({ ok: false, error: "missing_customer_email" }, 400);
+
+      // FULL emails nunca são mexidos por webhook
+      if (FULL_EMAILS.has(email)) {
+        return json({ ok: true, email, ignored: true, reason: "full_email" });
+      }
+
+      const event = String(
+        body?.event ||
+          body?.type ||
+          body?.webhook_event ||
+          body?.data?.event ||
+          body?.data?.type ||
+          ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const approveKeywords = ["aprov", "approved", "paid", "pago"];
+      const revokeKeywords = ["reemb", "refund", "charge", "estorn", "cancel"];
+
+      const key = `email:${email}`;
+      const current =
+        (await kvGet(key)) || {
+          email,
+          createdAt: now(),
+          revoked: false,
+          expiresAt: 0,
+          lastEvent: null,
+          updatedAt: now(),
+        };
+
+      // Compra aprovada -> 1 ano
+      if (approveKeywords.some((k) => event.includes(k))) {
+        current.revoked = false;
+        current.expiresAt = now() + ONE_YEAR_MS;
+      }
+
+      // Reembolso/chargeback/cancelamento -> revoga
+      if (revokeKeywords.some((k) => event.includes(k))) {
+        current.revoked = true;
+      }
+
+      current.lastEvent = event || "unknown";
+      current.updatedAt = now();
+
+      await kvPut(key, current);
+
+      return json({
+        ok: true,
+        email,
+        event: current.lastEvent,
+        revoked: current.revoked,
+        expiresAt: current.expiresAt,
+      });
+    }
+
+    // ========= PROMO BLOGUEIRO (ETERN0, RENOVÁVEL) =========
+    // POST /promo  body: { code, deviceId }
+    //
+    // Regras:
+    // - Código PROMO_CODE é eterno
+    // - Até 15 devices ATIVOS ao mesmo tempo
+    // - Cada device ganha 90 dias
+    // - Se expirar, libera vaga e pode renovar digitando o código de novo
+    if (request.method === "POST" && url.pathname === "/promo") {
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: "invalid_json" }, 400);
+      }
+
+      const code = normalizeCode(body?.code);
+      const deviceId = String(body?.deviceId || "").trim();
+
+      if (!code || !deviceId) {
+        return json({ ok: false, error: "missing_code_or_device" }, 400);
+      }
+      if (code !== PROMO_CODE) {
+        return json({ ok: false, error: "invalid_code" }, 401);
+      }
+
+      const stateKey = `promo:${PROMO_CODE}:state`;
+      // state = { devices: { [deviceId]: { grantedAt, expiresAt } } }
+      let state = (await kvGet(stateKey)) || { devices: {} };
+      const devices = state.devices || {};
+
+      // 1) LIMPA EXPIRADOS (libera vagas automaticamente)
+      const t = now();
+      for (const [did, rec] of Object.entries(devices)) {
+        if (!rec?.expiresAt || t >= rec.expiresAt) {
+          delete devices[did];
+        }
+      }
+
+      // 2) Se device já está ativo, libera sem consumir nova vaga
+      if (devices[deviceId]) {
+        state.devices = devices;
+        await kvPut(stateKey, state);
+
+        return json({
+          ok: true,
+          access: "granted",
+          reason: "already_active",
+          used: Object.keys(devices).length,
+          limit: PROMO_LIMIT,
+          expiresAt: devices[deviceId].expiresAt,
+        });
+      }
+
+      // 3) Se tem vaga, registra esse device por 90 dias
+      const usedCount = Object.keys(devices).length;
+      if (usedCount >= PROMO_LIMIT) {
+        state.devices = devices;
+        await kvPut(stateKey, state);
+
+        return json(
+          {
+            ok: false,
+            error: "limit_reached",
+            msg: "Limite de 15 acessos simultâneos atingido.",
+            used: usedCount,
+            limit: PROMO_LIMIT,
+          },
+          403
+        );
+      }
+
+      const expiresAt = t + PROMO_DURATION_MS;
+      devices[deviceId] = { grantedAt: t, expiresAt };
+
+      state.devices = devices;
+      await kvPut(stateKey, state);
+
+      return json({
+        ok: true,
+        access: "granted",
+        reason: "new_device_registered",
+        used: Object.keys(devices).length,
+        limit: PROMO_LIMIT,
+        expiresAt,
+      });
+    }
+
+    // (Opcional) Reset manual do promo (zera as 15 vagas)
+    // GET /promo_reset?code=33joao33
+    if (request.method === "GET" && url.pathname === "/promo_reset") {
+      const code = normalizeCode(url.searchParams.get("code"));
+      if (code !== PROMO_CODE) return json({ ok: false, error: "invalid_code" }, 401);
+      await kvDel(`promo:${PROMO_CODE}:state`);
+      return json({ ok: true, msg: "Promo resetada (15 vagas zeradas)." });
+    }
+
+    return json({ ok: false, error: "not_found", path: url.pathname }, 404);
+  },
+};
+```0
