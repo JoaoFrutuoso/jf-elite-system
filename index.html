@@ -1,171 +1,107 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sistema JF Elite</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      background: #0b0b0b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #loginCard {
-      width: 100%;
-      max-width: 420px;
-      background: #121212;
-      padding: 32px;
-      border-radius: 14px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.6);
-      text-align: center;
-    }
-
-    h1 {
-      color: #ffffff;
-      margin-bottom: 8px;
-      font-size: 26px;
-    }
-
-    p {
-      color: #9ca3af;
-      margin-bottom: 24px;
-      font-size: 14px;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: none;
-      outline: none;
-      margin-bottom: 16px;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background: #22c55e;
-      color: #000;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    #msg {
-      margin-top: 14px;
-      font-size: 14px;
-      min-height: 18px;
-    }
-
-    .error {
-      color: #ef4444;
-    }
-
-    .success {
-      color: #22c55e;
-    }
+    body { margin:0; font-family: Arial, sans-serif; background:#0b0b0b; color:#fff; display:flex; align-items:center; justify-content:center; height:100vh; }
+    #loginCard { width:min(520px, 92vw); background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:26px; }
+    h1 { margin:0 0 8px 0; font-size:42px; letter-spacing:.5px; }
+    .sub { opacity:.85; margin-bottom:16px; }
+    input { width:100%; box-sizing:border-box; font-size:20px; padding:14px 16px; border-radius:10px; border:1px solid #ccc; outline:none; }
+    button { width:100%; margin-top:12px; font-size:22px; padding:14px 16px; border-radius:10px; border:none; cursor:pointer; background:#21c45a; color:#061b0d; font-weight:700; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    #msg { margin-top:12px; min-height:24px; font-size:18px; }
+    .ok { color:#78ffb0; }
+    .err { color:#ff4b4b; }
+    .tiny { font-size:12px; opacity:.6; margin-top:10px; }
   </style>
 </head>
-
 <body>
-
   <div id="loginCard">
     <h1>Sistema JF Elite</h1>
-    <p>Acesso à calculadora</p>
+    <div class="sub">Acesso à calculadora</div>
 
-    <input
-      id="accessInput"
-      type="text"
-      placeholder="Digite seu e-mail ou código"
-      autocomplete="off"
-    />
-
-    <button id="loginBtn">Entrar</button>
+    <form id="loginForm">
+      <input id="keyInput" type="text" placeholder="Digite seu e-mail ou código" autocomplete="email" />
+      <button id="btn" type="submit">Entrar</button>
+    </form>
 
     <div id="msg"></div>
+    <div class="tiny">Se você comprou e não liberou, aguarde 1-2 minutos e tente de novo.</div>
   </div>
 
   <script>
-    const input = document.getElementById("accessInput");
-    const button = document.getElementById("loginBtn");
+    // ✅ SEU WORKER (base)
+    const API_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
+
+    const form = document.getElementById("loginForm");
+    const input = document.getElementById("keyInput");
+    const btn = document.getElementById("btn");
     const msg = document.getElementById("msg");
 
-    async function entrar() {
-      const value = input.value.trim();
-
-      if (!value) {
-        msg.textContent = "Digite um e-mail ou código.";
-        msg.className = "error";
-        return;
+    function getDeviceId() {
+      const k = "jf_device_id";
+      let id = localStorage.getItem(k);
+      if (!id) {
+        id = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+        localStorage.setItem(k, id);
       }
+      return id;
+    }
 
-      button.disabled = true;
-      msg.textContent = "Verificando acesso...";
-      msg.className = "";
+    function setMsg(text, ok=false) {
+      msg.className = ok ? "ok" : "err";
+      msg.textContent = text || "";
+    }
+
+    async function doLogin(key) {
+      setMsg("");
+      btn.disabled = true;
+      btn.textContent = "Entrando...";
 
       try {
-        const response = await fetch(
-          "https://rough-base-6eb1.jlucasandradeee.workers.dev/access",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              value: value
-            })
-          }
-        );
+        const res = await fetch(API_BASE + "/access", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ key, deviceId: getDeviceId() })
+        });
 
-        const data = await response.json();
+        const data = await res.json().catch(() => ({}));
 
-        if (data.ok) {
-          msg.textContent = "Acesso liberado. Entrando...";
-          msg.className = "success";
-
-          setTimeout(() => {
-            window.location.href = "app.html";
-          }, 800);
-        } else {
-          msg.textContent = data.error || "Acesso negado.";
-          msg.className = "error";
-          button.disabled = false;
+        if (!data || !data.ok) {
+          const e = (data && (data.msg || data.error)) ? (data.msg || data.error) : "Erro de conexão.";
+          throw new Error(e);
         }
 
+        // salva sessão simples
+        localStorage.setItem("jf_access_ok", "1");
+        localStorage.setItem("jf_access_exp", String(data.exp || ""));
+        localStorage.setItem("jf_access_mode", String(data.mode || ""));
+        localStorage.setItem("jf_access_key_last", key);
+
+        setMsg(data.msg || "Acesso liberado. Entrando...", true);
+
+        // redireciona
+        setTimeout(() => {
+          window.location.href = "./app.html";
+        }, 250);
+
       } catch (err) {
-        msg.textContent = "Erro de conexão.";
-        msg.className = "error";
-        button.disabled = false;
+        setMsg(String(err.message || "Erro de conexão."));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Entrar";
       }
     }
 
-    button.addEventListener("click", entrar);
-
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        entrar();
-      }
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const key = (input.value || "").trim();
+      if (!key) return setMsg("Digite seu e-mail ou código.");
+      doLogin(key);
     });
   </script>
-
 </body>
 </html>
