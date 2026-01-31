@@ -3,27 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>MacroPeso Inteligente</title>
 
-  <!-- ÍCONES DO SITE -->
+  <!-- ÍCONES -->
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
   <style>
-    :root {
-      --bg: #0f0f0f;
-      --card: #161616;
-      --text: #ffffff;
-      --muted: #bdbdbd;
-      --green: #00c853;
-      --green2: #00a845;
-      --red: #ff5252;
-      --border: #2a2a2a;
-    }
-
     * {
       box-sizing: border-box;
       font-family: Arial, Helvetica, sans-serif;
@@ -32,78 +20,61 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
+      background: #0f0f0f;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text);
+      color: #fff;
     }
 
     .card {
+      background: #161616;
+      padding: 32px;
+      border-radius: 14px;
       width: 100%;
       max-width: 420px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px;
       text-align: center;
-      box-shadow: 0 0 40px rgba(0,0,0,0.4);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 24px;
+      margin-bottom: 8px;
     }
 
     p {
-      margin: 0 0 20px;
-      color: var(--muted);
-      font-size: 14px;
+      color: #bdbdbd;
+      margin-bottom: 20px;
     }
 
     input {
       width: 100%;
       padding: 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #101010;
-      color: var(--text);
-      font-size: 15px;
-      outline: none;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
       margin-bottom: 14px;
-    }
-
-    input:focus {
-      border-color: var(--green);
     }
 
     button {
       width: 100%;
       padding: 14px;
-      border-radius: 10px;
+      background: #00c853;
       border: none;
-      background: linear-gradient(135deg, var(--green), var(--green2));
-      color: #000;
-      font-size: 15px;
+      border-radius: 8px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
     }
 
     button:hover {
-      opacity: 0.9;
+      background: #00a845;
     }
 
     .msg {
-      margin-top: 14px;
+      margin-top: 12px;
       font-size: 14px;
-    }
-
-    .error {
-      color: var(--red);
-    }
-
-    .success {
-      color: var(--green);
+      color: #00c853;
+      display: none;
     }
   </style>
 </head>
@@ -121,33 +92,27 @@
       required
     />
 
-    <button onclick="login()">Entrar</button>
+    <button onclick="entrar()">Entrar</button>
 
-    <div id="msg" class="msg"></div>
+    <div class="msg" id="msg">Acesso liberado. Entrando...</div>
   </div>
 
   <script>
-    function login() {
+    function entrar() {
       const email = document.getElementById("email").value.trim();
       const msg = document.getElementById("msg");
 
-      msg.textContent = "";
-      msg.className = "msg";
-
       if (!email) {
-        msg.textContent = "Digite seu e-mail para entrar.";
-        msg.classList.add("error");
+        alert("Digite um e-mail válido");
         return;
       }
 
-      // SALVA EMAIL (depois será validado pelo Cloudflare)
-      localStorage.setItem("email_logado", email);
+      msg.style.display = "block";
 
-      msg.textContent = "Acesso liberado. Entrando...";
-      msg.classList.add("success");
-
-      // FUTURO: redirecionar para a calculadora
-      // window.location.href = "app.html";
+      // REDIRECIONA PARA A CALCULADORA
+      setTimeout(() => {
+        window.location.href = "app.html";
+      }, 1200);
     }
   </script>
 
