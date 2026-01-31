@@ -2,22 +2,66 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MacroPeso Inteligente</title>
-  <link rel="icon" href="icon-192.png">
-  <style>
-    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b0f0d;color:#eaf3ee;font-family:Arial,Helvetica,sans-serif}
-    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:32px;width:90%;max-width:520px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-    h1{margin:0 0 8px}
-    p{margin:0;opacity:.7}
-    button{margin-top:20px;width:100%;padding:16px;font-size:18px;font-weight:bold;border:none;border-radius:14px;cursor:pointer;background:#00c853;color:#06210f}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-<body>
-  <div class="card">
-    <h1>MacroPeso Inteligente</h1>
-    <p>Login de acesso</p>
-    <button onclick="location.href='app.html'">Acessar</button>
+
+<body style="background:#0f0f0f;color:#fff;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh">
+
+  <div style="background:#161616;padding:30px;border-radius:12px;width:100%;max-width:400px;text-align:center">
+    <h2>MacroPeso Inteligente</h2>
+
+    <p>Digite seu e-mail (compradores) ou o código de acesso</p>
+
+    <input
+      id="access"
+      placeholder="ex: seuemail@gmail.com"
+      style="width:100%;padding:12px;border-radius:8px;border:none;margin-bottom:10px"
+    />
+
+    <button onclick="entrar()" style="width:100%;padding:12px;background:#00c853;border:none;border-radius:8px;font-weight:bold">
+      Entrar
+    </button>
+
+    <p id="msg" style="color:#ff5252;margin-top:10px"></p>
   </div>
+
+<script>
+  const API_URL = "https://SEU_WORKER.workers.dev/access";
+
+  function getDeviceId() {
+    let id = localStorage.getItem("deviceId");
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("deviceId", id);
+    }
+    return id;
+  }
+
+  async function entrar() {
+    const input = document.getElementById("access").value.trim();
+    const msg = document.getElementById("msg");
+
+    msg.textContent = "Verificando...";
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        input,
+        deviceId: getDeviceId(),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      window.location.href = data.redirectUrl;
+    } else {
+      msg.textContent = data.message || "Acesso negado.";
+    }
+  }
+</script>
+
 </body>
 </html>
