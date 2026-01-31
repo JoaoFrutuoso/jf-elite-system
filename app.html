@@ -6,157 +6,133 @@
   <title>MacroPeso • Calculadora</title>
 
   <!-- ÍCONES -->
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="icone-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icone-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icone-512.png" />
+
+  <meta name="theme-color" content="#0b2a1f" />
 
   <style>
     :root{
-      --bg:#0b0b0f;
-      --card:rgba(255,255,255,.08);
-      --border:rgba(255,255,255,.16);
-      --text:#ffffff;
-      --muted:rgba(255,255,255,.7);
-      --green:#00c853;
-      --green2:#00a845;
-      --shadow: 0 20px 60px rgba(0,0,0,.6);
-      --radius:18px;
+      --bg:#070b0a;
+      --card:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --text:#e9f3ef;
+      --muted:rgba(233,243,239,.65);
+      --green:#19e27a;
+      --green2:#12b861;
+      --shadow: 0 12px 60px rgba(25,226,122,.18);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: radial-gradient(800px 600px at 50% 30%, rgba(0,200,83,.18), transparent 60%),
-                  var(--bg);
+      padding:18px;
+      background:radial-gradient(900px 500px at 50% 40%, rgba(25,226,122,.20), transparent 60%),
+                 radial-gradient(700px 400px at 30% 20%, rgba(25,226,122,.10), transparent 65%),
+                 var(--bg);
       color:var(--text);
       font-family: Arial, Helvetica, sans-serif;
-      padding:24px;
-    }
-    .wrap{
-      width:min(980px, 95vw);
     }
     .top{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
-      margin-bottom:12px;
+      margin:6px auto 14px;
+      width:min(980px, 100%);
     }
-    .tag{
-      color:var(--muted);
-      font-size:13px;
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
     }
-    .btn{
-      border:none;
-      height:42px;
-      padding:0 14px;
+    .brand h1{
+      margin:0;
+      font-size:26px;
+      letter-spacing:-.5px;
+    }
+    .brand small{color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .ghost{
+      padding:10px 14px;
       border-radius:12px;
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      color:rgba(255,255,255,.85);
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
       cursor:pointer;
       font-weight:800;
     }
-    .card{
-      background: var(--card);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+
+    .wrap{
+      width:min(980px, 100%);
+      margin:0 auto;
       padding:18px;
-      backdrop-filter: blur(14px);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
-    h1{margin:0 0 6px 0;font-size:24px}
-    p{margin:0;color:var(--muted)}
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
+
+    .ok{color:#7CFFB0}
+    .bad{color:#ff7b7b}
+    .note{color:var(--muted); margin-top:8px; font-size:13px}
+
+    /* área da calculadora */
+    .calc{
       margin-top:14px;
+      padding:16px;
+      border-radius:16px;
+      background: rgba(0,0,0,.25);
+      border:1px solid var(--border);
+      min-height:260px;
     }
-    .box{
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius: 16px;
-      padding:14px;
-      min-height:120px;
+    .calc h2{margin:0 0 8px}
+    .placeholder{
+      color:var(--muted);
+      line-height:1.5;
+      font-size:14px;
     }
-    @media (max-width: 820px){
-      .grid{grid-template-columns:1fr}
-    }
-    .ok{
-      margin-top:10px;
-      color:#7CFFB2;
-      font-size:13px;
-    }
+    code{color:#7CFFB0}
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <h1>MacroPeso • Calculadora</h1>
-        <div class="tag" id="tag"></div>
-      </div>
-
-      <div style="display:flex; gap:10px;">
-        <button class="btn" id="sair">Sair</button>
-        <button class="btn" id="voltar">Voltar</button>
-      </div>
+  <div class="top">
+    <div class="brand">
+      <h1>MacroPeso • Calculadora</h1>
+      <small id="userLine">Carregando…</small>
     </div>
 
-    <div class="card">
-      <p>✅ Você está dentro. Aqui você coloca o código da sua calculadora (ou embute o seu sistema atual).</p>
-      <div class="ok" id="ok"></div>
-
-      <div class="grid">
-        <div class="box">
-          <b>Área da Calculadora</b>
-          <p style="margin-top:8px;">
-            Se você já tem a calculadora pronta em outro HTML/JS, me manda o arquivo/código e eu encaixo aqui.
-          </p>
-        </div>
-
-        <div class="box">
-          <b>Status</b>
-          <p style="margin-top:8px;">
-            Se esta página abre, significa que o login e o redirecionamento estão funcionando.
-          </p>
-        </div>
-      </div>
+    <div class="actions">
+      <button class="ghost" id="btnHome">Voltar</button>
+      <button class="ghost" id="btnClear">Limpar acesso</button>
+      <button class="ghost" id="btnLogout">Sair</button>
     </div>
   </div>
 
-<script>
-  const STORAGE_KEY = "macropeso_access_ok";
-  const EMAIL_KEY = "macropeso_email";
+  <div class="wrap">
+    <div id="status" class="ok">✅ Acesso liberado — página carregada com sucesso.</div>
+    <div class="note">
+      Se isso abriu, o login + redirecionamento está 100% funcionando. Agora é só colocar a calculadora real aqui dentro.
+    </div>
 
-  function temAcesso(){
-    return localStorage.getItem(STORAGE_KEY) === "1";
-  }
+    <div class="calc" id="calcRoot">
+      <h2>Área da Calculadora</h2>
 
-  // BLOQUEIO: se não tem acesso, volta pro index
-  if(!temAcesso()){
-    window.location.replace("index.html");
-  }
+      <!-- =========================
+           COLE A SUA CALCULADORA AQUI
+           (HTML + JS dela)
+           ========================= -->
 
-  const email = localStorage.getItem(EMAIL_KEY) || "";
-  document.getElementById("tag").textContent = email ? ("Logado como: " + email) : "Logado";
-  document.getElementById("ok").textContent = "Acesso liberado • Página carregada com sucesso.";
-
-  document.getElementById("sair").addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(EMAIL_KEY);
-    window.location.replace("index.html");
-  });
-
-  document.getElementById("voltar").addEventListener("click", () => {
-    window.location.href = "index.html";
-  });
-</script>
-</body>
-</html>
+      <div class="placeholder">
+        📌 Cole aqui o código da calculadora (o seu HTML/JS).
+        <br><br>
+        Se você já tem a calculadora pronta em outro arquivo, o jeito certo é:
+        <br>
+        - colocar o conteúdo dela dentro desta DIV
+        <br>
+        - ou me
