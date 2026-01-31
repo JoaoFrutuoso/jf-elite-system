@@ -135,4 +135,79 @@
         <br>
         - colocar o conteúdo dela dentro desta DIV
         <br>
-        - ou me
+        - ou me mandar o arquivo/código que eu encaixo exatamente no lugar.
+        <br><br>
+        Enquanto isso, o sistema está funcionando (login → acesso → app).
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "mp_access_email";
+    const STORAGE_TIME = "mp_access_time";
+
+    function normalizeEmail(v){
+      return String(v || "").trim().toLowerCase();
+    }
+
+    function requireAccess(){
+      const email = normalizeEmail(localStorage.getItem(STORAGE_KEY));
+      if (!email){
+        // se não tem acesso salvo, volta pro login
+        window.location.replace("index.html");
+        return null;
+      }
+      return email;
+    }
+
+    // Bloqueio
+    const email = requireAccess();
+    if (email){
+      document.getElementById("userLine").textContent = "Logado como: " + email;
+    }
+
+    // Botões
+    document.getElementById("btnHome").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("btnClear").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_TIME);
+      window.location.replace("index.html");
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_TIME);
+      window.location.replace("index.html");
+    });
+
+    // =========================
+    // Manifest (sem arquivo extra)
+    // melhora “Salvar na tela inicial”
+    // =========================
+    (function injectManifest(){
+      const manifest = {
+        name: "MacroPeso Inteligente",
+        short_name: "MacroPeso",
+        start_url: "./index.html",
+        display: "standalone",
+        background_color: "#070b0a",
+        theme_color: "#0b2a1f",
+        icons: [
+          { src: "icone-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icone-512.png", sizes: "512x512", type: "image/png" }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("link");
+      link.rel = "manifest";
+      link.href = url;
+      document.head.appendChild(link);
+    })();
+  </script>
+</body>
+</html>
