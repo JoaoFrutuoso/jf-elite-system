@@ -1,10 +1,214 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MacroPeso</title>
-  <meta http-equiv="refresh" content="0;url=https://macropesointeligente.my.canva.site/macropesointeligente">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MacroPeso Inteligente • Acesso</title>
+
+  <!-- Ícones (se você já subiu as imagens no GitHub com esses nomes, ele pega) -->
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+  <style>
+    :root{
+      --bg1:#050707; --bg2:#0b1412;
+      --card:#0f1a17cc; --stroke:#2a3b35;
+      --text:#e9f2ef; --muted:#b8c7c1;
+      --green:#19e36f; --green2:#10b85a;
+      --red:#ff3b3b;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    body{
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background: radial-gradient(1200px 800px at 20% 10%, #123b2b 0%, transparent 55%),
+                  radial-gradient(1000px 700px at 80% 40%, #0f2a22 0%, transparent 60%),
+                  linear-gradient(180deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      padding:24px;
+    }
+    .card{
+      width:min(560px,100%);
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, #0f1a17dd, #0b1311dd);
+      border-radius:18px;
+      padding:22px;
+      box-shadow:0 20px 80px rgba(0,0,0,.45);
+      position:relative;
+      overflow:hidden;
+    }
+    .glow{
+      position:absolute; inset:-200px;
+      background: radial-gradient(circle at 30% 30%, rgba(25,227,111,.18), transparent 55%),
+                  radial-gradient(circle at 70% 60%, rgba(25,227,111,.10), transparent 60%);
+      filter: blur(30px);
+      pointer-events:none;
+    }
+    h1{margin:0 0 6px; font-size:38px; letter-spacing:.2px}
+    .sub{margin:0 0 18px; color:var(--muted); font-size:15px; line-height:1.35}
+    label{display:block; margin:14px 0 8px; color:var(--muted); font-weight:700}
+    input{
+      width:100%;
+      border:1px solid #2d4039;
+      background:#0a1210;
+      color:var(--text);
+      padding:14px 14px;
+      border-radius:12px;
+      font-size:16px;
+      outline:none;
+    }
+    input:focus{border-color:rgba(25,227,111,.7); box-shadow:0 0 0 3px rgba(25,227,111,.15)}
+    .row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
+    button{
+      border:none; cursor:pointer;
+      padding:14px 18px; border-radius:12px;
+      font-weight:900; letter-spacing:.3px;
+      transition:.15s transform, .15s opacity;
+    }
+    button:active{transform:scale(.99)}
+    .btn-primary{
+      background:linear-gradient(180deg,var(--green),var(--green2));
+      color:#06120c;
+      min-width:220px;
+    }
+    .btn-ghost{
+      background:#16231f;
+      color:var(--text);
+      border:1px solid #2a3b35;
+      opacity:.95;
+    }
+    .status{margin-top:12px; font-weight:900}
+    .ok{color:var(--green)}
+    .err{color:var(--red)}
+    .foot{margin-top:14px; color:#7f948c; font-size:13px}
+  </style>
 </head>
-<body></body>
+
+<body>
+  <div class="card">
+    <div class="glow"></div>
+
+    <h1>MacroPeso Inteligente</h1>
+    <p class="sub">
+      Digite seu <b>e-mail</b> (compradores) <b>OU</b> o <b>código</b> (convidados).<br>
+      Exemplo de código: <b>123456</b>
+    </p>
+
+    <label for="input">E-mail ou Código</label>
+    <input id="input" autocomplete="off" placeholder="ex: seuemail@gmail.com  |  ex: 123456"/>
+
+    <div class="row">
+      <button class="btn-primary" id="btnEnter">Entrar</button>
+      <button class="btn-ghost" id="btnClear" type="button">Limpar acesso</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="foot">© João Frutuoso</div>
+  </div>
+
+<script>
+  // ✅ URL CORRETA DO SEU WORKER (COM O PONTO!)
+  const API_URL = "https://rough-base-6eb1.jlucasandradeee.workers.dev/access";
+
+  // ✅ Link da sua calculadora no Canva
+  const REDIRECT_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
+
+  // Token local pra não pedir toda hora no MESMO dispositivo
+  const LS_TOKEN = "mp_access_token_v1";
+  const LS_DEVICE = "mp_device_id_v1";
+
+  const $input = document.getElementById("input");
+  const $status = document.getElementById("status");
+  const $btnEnter = document.getElementById("btnEnter");
+  const $btnClear = document.getElementById("btnClear");
+
+  function setStatus(msg, type){
+    $status.className = "status " + (type || "");
+    $status.textContent = msg || "";
+  }
+
+  function getDeviceId(){
+    let id = localStorage.getItem(LS_DEVICE);
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : ("dev-" + Math.random().toString(16).slice(2) + Date.now()));
+      localStorage.setItem(LS_DEVICE, id);
+    }
+    return id;
+  }
+
+  function saveToken(hours){
+    const until = Date.now() + (hours * 60 * 60 * 1000);
+    localStorage.setItem(LS_TOKEN, JSON.stringify({ until }));
+  }
+
+  function hasValidToken(){
+    try{
+      const raw = localStorage.getItem(LS_TOKEN);
+      if(!raw) return false;
+      const obj = JSON.parse(raw);
+      return obj.until && Date.now() < obj.until;
+    }catch{ return false; }
+  }
+
+  function go(){
+    window.location.href = REDIRECT_URL;
+  }
+
+  // Auto-entra se já validou nesse dispositivo
+  if (hasValidToken()){
+    go();
+  }
+
+  $btnClear.addEventListener("click", () => {
+    localStorage.removeItem(LS_TOKEN);
+    setStatus("Acesso limpo. Digite novamente.", "ok");
+  });
+
+  async function submit(){
+    const input = ($input.value || "").trim();
+    if(!input){
+      setStatus("Digite e-mail ou código.", "err");
+      return;
+    }
+
+    setStatus("Verificando…", "");
+    $btnEnter.disabled = true;
+
+    try{
+      const deviceId = getDeviceId();
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ input, deviceId })
+      });
+
+      const data = await res.json().catch(()=>({}));
+
+      if (!res.ok || !data.ok){
+        setStatus(data.message || "Acesso negado.", "err");
+        $btnEnter.disabled = false;
+        return;
+      }
+
+      // salva token local por 12h (só nesse device)
+      saveToken(12);
+
+      setStatus("Acesso liberado. Entrando…", "ok");
+      setTimeout(go, 250);
+
+    }catch(e){
+      setStatus("Erro de conexão. Tente novamente.", "err");
+      $btnEnter.disabled = false;
+    }
+  }
+
+  document.getElementById("btnEnter").addEventListener("click", submit);
+  $input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submit();
+  });
+</script>
+</body>
 </html>
