@@ -125,3 +125,89 @@
     <div id="msg" class="msg"></div>
 
     <div class="row">
+      <button class="ghost" id="limpar">Limpar acesso</button>
+      <button class="ghost" id="ir">Ir direto (se já liberou)</button>
+    </div>
+
+    <div class="mini">
+      🔒 Acesso por e-mail. Se você já liberou antes neste dispositivo, dá pra entrar direto.<br>
+      (Se quiser, depois a gente troca isso por validação via API/Cloudflare pra ficar “anti-cópia”.)
+    </div>
+  </div>
+
+<script>
+  // ✅ COLOQUE AQUI OS E-MAILS LIBERADOS (minúsculo)
+  // Exemplo:
+  // const EMAILS_LIBERADOS = ["cliente@gmail.com", "outro@dominio.com"];
+  const EMAILS_LIBERADOS = [
+    // "jlucasandradeee@gmail.com"
+  ];
+
+  const STORAGE_KEY = "macropeso_access_ok";
+  const EMAIL_KEY = "macropeso_email";
+
+  const elEmail = document.getElementById("email");
+  const elMsg = document.getElementById("msg");
+
+  function setMsg(text, type){
+    elMsg.textContent = text || "";
+    elMsg.className = "msg" + (type ? (" " + type) : "");
+  }
+
+  function normalizaEmail(v){
+    return (v || "").trim().toLowerCase();
+  }
+
+  function temAcesso(){
+    return localStorage.getItem(STORAGE_KEY) === "1";
+  }
+
+  function abrirApp(){
+    // abre a calculadora
+    window.location.href = "app.html";
+  }
+
+  document.getElementById("btn").addEventListener("click", () => {
+    const email = normalizaEmail(elEmail.value);
+
+    if(!email || !email.includes("@") || !email.includes(".")){
+      setMsg("Digite um e-mail válido.", "err");
+      return;
+    }
+
+    // Se você NÃO quiser whitelist, comente o bloco abaixo
+    if(EMAILS_LIBERADOS.length > 0 && !EMAILS_LIBERADOS.includes(email)){
+      setMsg("E-mail não encontrado na lista de acesso.", "err");
+      return;
+    }
+
+    // libera
+    localStorage.setItem(STORAGE_KEY, "1");
+    localStorage.setItem(EMAIL_KEY, email);
+
+    setMsg("Acesso liberado. Entrando...", "ok");
+    setTimeout(abrirApp, 450);
+  });
+
+  document.getElementById("limpar").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    setMsg("Acesso limpo neste dispositivo.", "");
+  });
+
+  document.getElementById("ir").addEventListener("click", () => {
+    if(temAcesso()){
+      abrirApp();
+    } else {
+      setMsg("Ainda não tem acesso liberado neste dispositivo.", "err");
+    }
+  });
+
+  // Se já liberou antes, dá feedback
+  if(temAcesso()){
+    const e = localStorage.getItem(EMAIL_KEY) || "";
+    setMsg("Acesso já liberado" + (e ? (" para: " + e) : "") + ". Clique em 'Ir direto'.", "ok");
+  }
+</script>
+</body>
+</html>
