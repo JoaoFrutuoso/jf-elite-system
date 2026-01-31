@@ -1,213 +1,125 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MacroPeso • Calculadora</title>
+  <meta charset="UTF-8">
+  <title>MacroPeso • Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ÍCONES -->
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-  <link rel="apple-touch-icon" sizes="192x192" href="icone-192.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icone-192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icone-512.png" />
-
-  <meta name="theme-color" content="#0b2a1f" />
+  <link rel="icon" href="icon-192.png">
 
   <style>
-    :root{
-      --bg:#070b0a;
-      --card:rgba(255,255,255,.06);
-      --border:rgba(255,255,255,.12);
-      --text:#e9f3ef;
-      --muted:rgba(233,243,239,.65);
-      --green:#19e27a;
-      --green2:#12b861;
-      --shadow: 0 12px 60px rgba(25,226,122,.18);
-    }
-    *{box-sizing:border-box}
     body{
       margin:0;
       min-height:100vh;
-      padding:18px;
-      background:radial-gradient(900px 500px at 50% 40%, rgba(25,226,122,.20), transparent 60%),
-                 radial-gradient(700px 400px at 30% 20%, rgba(25,226,122,.10), transparent 65%),
-                 var(--bg);
-      color:var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-    .top{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin:6px auto 14px;
-      width:min(980px, 100%);
+      justify-content:center;
+      background:#0b0f0d;
+      color:#eaf3ee;
+      font-family:Arial, Helvetica, sans-serif;
     }
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .brand h1{
-      margin:0;
-      font-size:26px;
-      letter-spacing:-.5px;
-    }
-    .brand small{color:var(--muted)}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .ghost{
-      padding:10px 14px;
-      border-radius:12px;
+    .card{
       background:rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      color:var(--text);
-      cursor:pointer;
-      font-weight:800;
-    }
-
-    .wrap{
-      width:min(980px, 100%);
-      margin:0 auto;
-      padding:18px;
+      border:1px solid rgba(255,255,255,.15);
       border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-      border:1px solid var(--border);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      padding:30px;
+      width:90%;
+      max-width:520px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    h1{margin-bottom:6px}
+    p{opacity:.7}
+
+    input{
+      width:100%;
+      padding:14px;
+      margin-top:16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.2);
+      background:rgba(0,0,0,.3);
+      color:#fff;
+      font-size:16px;
     }
 
-    .ok{color:#7CFFB0}
-    .bad{color:#ff7b7b}
-    .note{color:var(--muted); margin-top:8px; font-size:13px}
-
-    /* área da calculadora */
-    .calc{
-      margin-top:14px;
-      padding:16px;
-      border-radius:16px;
-      background: rgba(0,0,0,.25);
-      border:1px solid var(--border);
-      min-height:260px;
+    button{
+      width:100%;
+      padding:15px;
+      margin-top:16px;
+      border:none;
+      border-radius:14px;
+      font-size:17px;
+      font-weight:bold;
+      cursor:pointer;
     }
-    .calc h2{margin:0 0 8px}
-    .placeholder{
-      color:var(--muted);
-      line-height:1.5;
+
+    .btn-main{
+      background:#00c853;
+      color:#06210f;
+    }
+    .btn-ghost{
+      background:rgba(255,255,255,.08);
+      color:#fff;
+    }
+
+    .status{
+      margin-top:10px;
       font-size:14px;
+      opacity:.8;
     }
-    code{color:#7CFFB0}
   </style>
 </head>
 
 <body>
-  <div class="top">
-    <div class="brand">
-      <h1>MacroPeso • Calculadora</h1>
-      <small id="userLine">Carregando…</small>
-    </div>
+  <div class="card">
+    <h1>MacroPeso Inteligente</h1>
+    <p>Digite seu e-mail para acessar</p>
 
-    <div class="actions">
-      <button class="ghost" id="btnHome">Voltar</button>
-      <button class="ghost" id="btnClear">Limpar acesso</button>
-      <button class="ghost" id="btnLogout">Sair</button>
-    </div>
+    <input id="email" type="email" placeholder="Digite seu e-mail">
+
+    <button class="btn-main" onclick="login()">Entrar</button>
+    <button class="btn-ghost" onclick="limpar()">Limpar acesso</button>
+
+    <div class="status" id="status"></div>
   </div>
 
-  <div class="wrap">
-    <div id="status" class="ok">✅ Acesso liberado — página carregada com sucesso.</div>
-    <div class="note">
-      Se isso abriu, o login + redirecionamento está 100% funcionando. Agora é só colocar a calculadora real aqui dentro.
-    </div>
+<script>
+  const CALCULADORA_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
+  const KEY = "macropeso_email";
 
-    <div class="calc" id="calcRoot">
-      <h2>Área da Calculadora</h2>
+  function login(){
+    const email = document.getElementById("email").value.trim().toLowerCase();
 
-      <!-- =========================
-           COLE A SUA CALCULADORA AQUI
-           (HTML + JS dela)
-           ========================= -->
-
-      <div class="placeholder">
-        📌 Cole aqui o código da calculadora (o seu HTML/JS).
-        <br><br>
-        Se você já tem a calculadora pronta em outro arquivo, o jeito certo é:
-        <br>
-        - colocar o conteúdo dela dentro desta DIV
-        <br>
-        - ou me mandar o arquivo/código que eu encaixo exatamente no lugar.
-        <br><br>
-        Enquanto isso, o sistema está funcionando (login → acesso → app).
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const STORAGE_KEY = "mp_access_email";
-    const STORAGE_TIME = "mp_access_time";
-
-    function normalizeEmail(v){
-      return String(v || "").trim().toLowerCase();
+    if(!email || !email.includes("@")){
+      status("Digite um e-mail válido.");
+      return;
     }
 
-    function requireAccess(){
-      const email = normalizeEmail(localStorage.getItem(STORAGE_KEY));
-      if (!email){
-        // se não tem acesso salvo, volta pro login
-        window.location.replace("index.html");
-        return null;
-      }
-      return email;
-    }
+    localStorage.setItem(KEY, email);
+    status("Acesso liberado. Abrindo calculadora...");
 
-    // Bloqueio
-    const email = requireAccess();
-    if (email){
-      document.getElementById("userLine").textContent = "Logado como: " + email;
-    }
+    setTimeout(()=>{
+      window.location.href = CALCULADORA_URL;
+    }, 800);
+  }
 
-    // Botões
-    document.getElementById("btnHome").addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
+  function limpar(){
+    localStorage.removeItem(KEY);
+    document.getElementById("email").value = "";
+    status("Acesso removido.");
+  }
 
-    document.getElementById("btnClear").addEventListener("click", () => {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_TIME);
-      window.location.replace("index.html");
-    });
+  function status(msg){
+    document.getElementById("status").innerText = msg;
+  }
 
-    document.getElementById("btnLogout").addEventListener("click", () => {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_TIME);
-      window.location.replace("index.html");
-    });
-
-    // =========================
-    // Manifest (sem arquivo extra)
-    // melhora “Salvar na tela inicial”
-    // =========================
-    (function injectManifest(){
-      const manifest = {
-        name: "MacroPeso Inteligente",
-        short_name: "MacroPeso",
-        start_url: "./index.html",
-        display: "standalone",
-        background_color: "#070b0a",
-        theme_color: "#0b2a1f",
-        icons: [
-          { src: "icone-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icone-512.png", sizes: "512x512", type: "image/png" }
-        ]
-      };
-      const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement("link");
-      link.rel = "manifest";
-      link.href = url;
-      document.head.appendChild(link);
-    })();
-  </script>
+  // Auto login
+  const saved = localStorage.getItem(KEY);
+  if(saved){
+    status("Acesso já liberado. Redirecionando...");
+    setTimeout(()=>{
+      window.location.href = CALCULADORA_URL;
+    }, 800);
+  }
+</script>
 </body>
 </html>
