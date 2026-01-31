@@ -2,35 +2,33 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MacroPeso Inteligente</title>
 
   <!-- ÍCONES -->
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <style>
     body {
       margin: 0;
       min-height: 100vh;
-      background: #0f0f0f;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      background: #0f0f0f;
+      font-family: Arial, Helvetica, sans-serif;
       color: #fff;
     }
 
     .card {
       background: #161616;
-      padding: 32px;
-      border-radius: 14px;
+      padding: 30px;
+      border-radius: 16px;
       width: 100%;
       max-width: 420px;
       text-align: center;
@@ -38,43 +36,53 @@
     }
 
     h1 {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     p {
+      margin-top: 0;
       color: #bdbdbd;
-      margin-bottom: 20px;
+      font-size: 14px;
     }
 
     input {
       width: 100%;
       padding: 14px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: none;
+      margin-top: 20px;
       font-size: 16px;
-      margin-bottom: 14px;
     }
 
     button {
       width: 100%;
+      margin-top: 16px;
       padding: 14px;
-      background: #00c853;
+      border-radius: 10px;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      background: #00c853;
+      color: #000;
+      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
     }
 
     button:hover {
-      background: #00a845;
+      background: #00e676;
     }
 
     .msg {
-      margin-top: 12px;
+      margin-top: 14px;
       font-size: 14px;
-      color: #00c853;
-      display: none;
+      min-height: 18px;
+    }
+
+    .ok {
+      color: #00e676;
+    }
+
+    .erro {
+      color: #ff5252;
     }
   </style>
 </head>
@@ -85,16 +93,11 @@
     <h1>MacroPeso Inteligente</h1>
     <p>Calculadora nutricional baseada na TACO</p>
 
-    <input
-      type="email"
-      id="email"
-      placeholder="Digite seu e-mail"
-      required
-    />
+    <input type="email" id="email" placeholder="Digite seu e-mail" />
 
     <button onclick="entrar()">Entrar</button>
 
-    <div class="msg" id="msg">Acesso liberado. Entrando...</div>
+    <div id="msg" class="msg"></div>
   </div>
 
   <script>
@@ -103,16 +106,18 @@
       const msg = document.getElementById("msg");
 
       if (!email) {
-        alert("Digite um e-mail válido");
+        msg.textContent = "Digite um e-mail válido.";
+        msg.className = "msg erro";
         return;
       }
 
-      msg.style.display = "block";
+      msg.textContent = "Acesso liberado. Entrando...";
+      msg.className = "msg ok";
 
-      // REDIRECIONA PARA A CALCULADORA
+      // REDIRECIONAMENTO CORRETO
       setTimeout(() => {
         window.location.href = "app.html";
-      }, 1200);
+      }, 800);
     }
   </script>
 
