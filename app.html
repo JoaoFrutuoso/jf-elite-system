@@ -1,7 +1,71 @@
-<script>
-  if (localStorage.getItem("mp_ok") !== "1") {
-    window.location.href = "/index.html";
-  } else {
-    window.location.href = "https://macropesointeligente.my.canva.site/macropesointeligente/SEU-LINK";
-  }
-</script>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>MacroPeso Inteligente - App</title>
+
+  <link rel="icon" href="icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #0f0f0f;
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .box {
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #aaa;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      background: #ff5252;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h1>Calculadora MacroPeso</h1>
+    <p id="email"></p>
+
+    <p>✔️ App carregado com sucesso</p>
+
+    <button onclick="sair()">Sair</button>
+  </div>
+
+  <script>
+    const email = localStorage.getItem("usuario_email");
+
+    if (!email) {
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("email").innerText = "Usuário: " + email;
+    }
+
+    function sair() {
+      localStorage.removeItem("usuario_email");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
