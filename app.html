@@ -4,122 +4,135 @@
   <meta charset="UTF-8">
   <title>MacroPeso • Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="icon" href="icon-192.png">
-
   <style>
-    body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#0b0f0d;
-      color:#eaf3ee;
-      font-family:Arial, Helvetica, sans-serif;
-    }
-    .card{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.15);
-      border-radius:18px;
-      padding:30px;
-      width:90%;
-      max-width:520px;
-      box-shadow:0 20px 60px rgba(0,0,0,.5);
-    }
-    h1{margin-bottom:6px}
-    p{opacity:.7}
-
-    input{
-      width:100%;
-      padding:14px;
-      margin-top:16px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.2);
-      background:rgba(0,0,0,.3);
-      color:#fff;
-      font-size:16px;
-    }
-
-    button{
-      width:100%;
-      padding:15px;
-      margin-top:16px;
-      border:none;
-      border-radius:14px;
-      font-size:17px;
-      font-weight:bold;
-      cursor:pointer;
-    }
-
-    .btn-main{
-      background:#00c853;
-      color:#06210f;
-    }
-    .btn-ghost{
-      background:rgba(255,255,255,.08);
-      color:#fff;
-    }
-
-    .status{
-      margin-top:10px;
-      font-size:14px;
-      opacity:.8;
-    }
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b0f0d;color:#eaf3ee;font-family:Arial,Helvetica,sans-serif}
+    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:30px;width:90%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    h1{margin:0 0 6px}
+    p{margin:0;opacity:.7}
+    label{display:block;margin-top:16px;font-size:13px;opacity:.75}
+    input{width:100%;padding:14px;margin-top:8px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.3);color:#fff;font-size:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    button{flex:1;min-width:160px;padding:15px;border:none;border-radius:14px;font-size:16px;font-weight:bold;cursor:pointer}
+    .btn-main{background:#00c853;color:#06210f}
+    .btn-ghost{background:rgba(255,255,255,.08);color:#fff}
+    .status{margin-top:12px;font-size:14px;opacity:.9;white-space:pre-line}
+    .ok{color:#71ff9c}
+    .bad{color:#ff7a7a}
+    .mini{margin-top:10px;font-size:12px;opacity:.65}
   </style>
 </head>
 
 <body>
   <div class="card">
     <h1>MacroPeso Inteligente</h1>
-    <p>Digite seu e-mail para acessar</p>
+    <p>Digite seu e-mail. Se tiver código promocional, coloque também.</p>
 
-    <input id="email" type="email" placeholder="Digite seu e-mail">
+    <label for="email">E-mail</label>
+    <input id="email" type="email" placeholder="ex: seuemail@gmail.com" autocomplete="email">
 
-    <button class="btn-main" onclick="login()">Entrar</button>
-    <button class="btn-ghost" onclick="limpar()">Limpar acesso</button>
+    <label for="code">Código (opcional)</label>
+    <input id="code" type="text" placeholder="ex: 33joao33" autocomplete="one-time-code">
+
+    <div class="row">
+      <button class="btn-main" id="btnEntrar">Entrar</button>
+      <button class="btn-ghost" id="btnLimpar">Limpar acesso</button>
+      <button class="btn-ghost" onclick="location.href='index.html'">Voltar</button>
+    </div>
 
     <div class="status" id="status"></div>
+    <div class="mini">Dica: se já estiver liberado neste dispositivo, entra automático.</div>
   </div>
 
 <script>
-  const CALCULADORA_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
-  const KEY = "macropeso_email";
+  // ✅ TROQUE AQUI pela URL do seu Worker (Cloudflare)
+  // exemplo: https://rough-base-6eb1.jlucasandradeee.workers.dev
+  const WORKER_BASE = "https://rough-base-6eb1.jlucasandradeee.workers.dev";
 
-  function login(){
-    const email = document.getElementById("email").value.trim().toLowerCase();
+  const LS_DEVICE = "mp_device_id";
+  const LS_EMAIL  = "mp_email_ok";
 
-    if(!email || !email.includes("@")){
-      status("Digite um e-mail válido.");
+  function setStatus(msg, type){
+    const el = document.getElementById("status");
+    el.className = "status " + (type||"");
+    el.textContent = msg || "";
+  }
+
+  function getDeviceId(){
+    let id = localStorage.getItem(LS_DEVICE);
+    if(!id){
+      id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+      localStorage.setItem(LS_DEVICE, id);
+    }
+    return id;
+  }
+
+  function normalizeEmail(v){ return (v||"").trim().toLowerCase(); }
+  function normalizeCode(v){ return (v||"").trim(); }
+  function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  async function entrar(){
+    const email = normalizeEmail(document.getElementById("email").value);
+    const code  = normalizeCode(document.getElementById("code").value);
+    const deviceId = getDeviceId();
+
+    if(!validEmail(email)){
+      setStatus("Digite um e-mail válido.", "bad");
       return;
     }
 
-    localStorage.setItem(KEY, email);
-    status("Acesso liberado. Abrindo calculadora...");
+    setStatus("Verificando acesso…", "");
 
-    setTimeout(()=>{
-      window.location.href = CALCULADORA_URL;
-    }, 800);
+    try{
+      const url = `${WORKER_BASE}/access`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ email, code, deviceId })
+      });
+
+      const data = await resp.json().catch(()=>({}));
+
+      if(!resp.ok || !data.ok){
+        setStatus(data.message || "Acesso negado.", "bad");
+        return;
+      }
+
+      // salva pra auto-login
+      localStorage.setItem(LS_EMAIL, email);
+
+      setStatus("✅ Acesso liberado! Abrindo calculadora…", "ok");
+
+      // redireciona
+      setTimeout(()=>{
+        window.location.href = data.redirectUrl;
+      }, 600);
+
+    }catch(e){
+      setStatus("Erro ao verificar acesso. Verifique o Worker e tente novamente.", "bad");
+    }
   }
 
   function limpar(){
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(LS_EMAIL);
     document.getElementById("email").value = "";
-    status("Acesso removido.");
+    document.getElementById("code").value = "";
+    setStatus("Acesso local limpo. Digite novamente.", "");
   }
 
-  function status(msg){
-    document.getElementById("status").innerText = msg;
-  }
+  document.getElementById("btnEntrar").addEventListener("click", entrar);
+  document.getElementById("btnLimpar").addEventListener("click", limpar);
+  document.getElementById("email").addEventListener("keydown", (e)=>{ if(e.key==="Enter") entrar(); });
+  document.getElementById("code").addEventListener("keydown", (e)=>{ if(e.key==="Enter") entrar(); });
 
-  // Auto login
-  const saved = localStorage.getItem(KEY);
-  if(saved){
-    status("Acesso já liberado. Redirecionando...");
-    setTimeout(()=>{
-      window.location.href = CALCULADORA_URL;
-    }, 800);
-  }
+  // auto-login (só tenta se houver e-mail salvo)
+  (async ()=>{
+    const savedEmail = normalizeEmail(localStorage.getItem(LS_EMAIL));
+    if(savedEmail && validEmail(savedEmail)){
+      document.getElementById("email").value = savedEmail;
+      await entrar();
+    }
+  })();
 </script>
 </body>
 </html>
