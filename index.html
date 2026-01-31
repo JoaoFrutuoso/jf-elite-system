@@ -6,15 +6,12 @@
 
   <title>MacroPeso Inteligente</title>
 
-  <!-- FAVICONS / ÍCONES -->
-  <link rel="icon" href="favicon.ico" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <!-- ÍCONES DO SITE -->
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
-  <!-- ESTILO BASE -->
   <style>
     :root {
       --bg: #0f0f0f;
@@ -29,19 +26,17 @@
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
       font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
+      margin: 0;
       min-height: 100vh;
       background: var(--bg);
-      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      color: var(--text);
     }
 
     .card {
@@ -49,54 +44,112 @@
       max-width: 420px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
+      border-radius: 14px;
+      padding: 28px;
       text-align: center;
+      box-shadow: 0 0 40px rgba(0,0,0,0.4);
     }
 
     h1 {
-      font-size: 22px;
-      margin-bottom: 12px;
+      margin: 0 0 8px;
+      font-size: 24px;
     }
 
     p {
-      font-size: 14px;
+      margin: 0 0 20px;
       color: var(--muted);
-      margin-bottom: 20px;
+      font-size: 14px;
     }
 
-    .btn {
+    input {
       width: 100%;
       padding: 14px;
-      border-radius: 8px;
-      border: none;
-      background: var(--green);
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #101010;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 14px;
     }
 
-    .btn:hover {
-      background: var(--green2);
+    input:focus {
+      border-color: var(--green);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--green), var(--green2));
+      color: #000;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .msg {
+      margin-top: 14px;
+      font-size: 14px;
+    }
+
+    .error {
+      color: var(--red);
+    }
+
+    .success {
+      color: var(--green);
     }
   </style>
 </head>
 
 <body>
+
   <div class="card">
     <h1>MacroPeso Inteligente</h1>
     <p>Calculadora nutricional baseada na TACO</p>
 
-    <button class="btn" onclick="abrirApp()">
-      Acessar calculadora
-    </button>
+    <input
+      type="email"
+      id="email"
+      placeholder="Digite seu e-mail"
+      required
+    />
+
+    <button onclick="login()">Entrar</button>
+
+    <div id="msg" class="msg"></div>
   </div>
 
   <script>
-    function abrirApp() {
-      window.location.href = "app.html";
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const msg = document.getElementById("msg");
+
+      msg.textContent = "";
+      msg.className = "msg";
+
+      if (!email) {
+        msg.textContent = "Digite seu e-mail para entrar.";
+        msg.classList.add("error");
+        return;
+      }
+
+      // SALVA EMAIL (depois será validado pelo Cloudflare)
+      localStorage.setItem("email_logado", email);
+
+      msg.textContent = "Acesso liberado. Entrando...";
+      msg.classList.add("success");
+
+      // FUTURO: redirecionar para a calculadora
+      // window.location.href = "app.html";
     }
   </script>
+
 </body>
 </html>
