@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>MacroPeso Inteligente • Acesso</title>
 
+  <!-- Favicons (se você já subiu os arquivos no repositório) -->
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
   <style>
     :root{
       --bg:#050707; --card:#0f1a17; --stroke:#2a3b35;
@@ -26,6 +32,8 @@
       border-radius:18px;
       padding:22px;
       box-shadow:0 20px 80px rgba(0,0,0,.45);
+      position:relative;
+      z-index:10; /* garante que nada fica por cima */
     }
     h1{margin:0 0 6px; font-size:34px}
     p{margin:0 0 16px; color:var(--muted); line-height:1.35}
@@ -45,23 +53,38 @@
     .status{margin-top:12px; font-weight:900}
     .ok{color:var(--green)} .err{color:var(--red)}
     .foot{margin-top:14px; color:#7f948c; font-size:13px}
+
+    /* ✅ LOGO sem bloquear cliques */
+    .logo{
+      display:block;
+      margin:0 auto 12px auto;
+      width:92px;
+      height:92px;
+      object-fit:contain;
+      pointer-events:none; /* CRÍTICO: não bloqueia botão/input */
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+    }
   </style>
 </head>
 
 <body>
   <div class="card">
+    <!-- ✅ COLOQUE SUA LOGO AQUI (pode deixar vazio) -->
+    <img id="logo" class="logo" alt="MacroPeso Inteligente" />
+
     <h1>MacroPeso Inteligente</h1>
     <p>
-      Digite seu <b>e-mail</b> (compradores) <b>OU</b> o <b>código</b> (convidados).<br>
+      Digite seu <b>e-mail</b> (compradores) <b>OU</b> seu <b>código</b> (convidados).<br>
       Exemplo de código: <b>123456</b>
     </p>
 
     <label for="input">E-mail ou Código</label>
-    <input id="input" autocomplete="off" placeholder="ex: seuemail@gmail.com  |  ex: 123456"/>
+    <input id="input" autocomplete="off" placeholder="ex: seuemail@gmail.com | ex: 123456"/>
 
     <div class="row">
       <button class="primary" id="btnEnter">Entrar</button>
-      <button class="ghost" id="btnClear" type="button">Limpar (teste)</button>
+      <button class="ghost" id="btnLogout" type="button">Sair (teste)</button>
     </div>
 
     <div class="status" id="status"></div>
@@ -69,20 +92,24 @@
   </div>
 
 <script>
-  // ✅ URL CERTA (com o ponto)
+  // ✅ Seu Worker (já com /access)
   const API_URL = "https://rough-base-6eb1.jlucasandradeee.workers.dev/access";
 
-  // ✅ sua calculadora
+  // ✅ Sua calculadora
   const REDIRECT_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
 
-  // ✅ NÃO grava permanente — só enquanto a aba estiver aberta
+  // ✅ Logo (opcional). Se você subir "logo.png" no mesmo repositório, troque para "logo.png"
+  const LOGO_URL = "logo.png"; // pode trocar por um link completo; ou deixar "" para esconder
+
+  // ✅ Sessão só na aba (fechou → pede de novo)
   const SESSION_OK = "mp_ok_session";
   const SESSION_DEVICE = "mp_device_session";
 
   const $input = document.getElementById("input");
   const $status = document.getElementById("status");
   const $btnEnter = document.getElementById("btnEnter");
-  const $btnClear = document.getElementById("btnClear");
+  const $btnLogout = document.getElementById("btnLogout");
+  const $logo = document.getElementById("logo");
 
   function setStatus(msg, type){
     $status.className = "status " + (type || "");
@@ -102,15 +129,24 @@
     window.location.href = REDIRECT_URL;
   }
 
-  // ✅ Se a aba ainda estiver aberta e já validou, entra
-  // (fechou a aba → perde → pede de novo)
+  // ✅ Logo sem quebrar nada
+  if (!LOGO_URL) {
+    $logo.style.display = "none";
+  } else {
+    $logo.src = LOGO_URL;
+    $logo.onerror = () => { $logo.style.display = "none"; };
+  }
+
+  // ✅ NUNCA auto-entra de forma permanente.
+  // Só entra se a aba ainda estiver aberta e já validou.
   if (sessionStorage.getItem(SESSION_OK) === "1") {
     go();
   }
 
-  $btnClear.addEventListener("click", () => {
+  // Botão Sair (para você testar sempre)
+  $btnLogout.addEventListener("click", () => {
     sessionStorage.removeItem(SESSION_OK);
-    setStatus("Ok. Agora ele vai pedir de novo (só pra teste).", "ok");
+    setStatus("Sessão limpa. Agora ele vai pedir de novo.", "ok");
     $input.value = "";
     $input.focus();
   });
@@ -142,9 +178,10 @@
         return;
       }
 
+      // ✅ ok
       sessionStorage.setItem(SESSION_OK, "1");
       setStatus("Acesso liberado. Entrando…", "ok");
-      setTimeout(go, 250);
+      setTimeout(go, 200);
 
     }catch(e){
       setStatus("Erro de conexão. Tente novamente.", "err");
