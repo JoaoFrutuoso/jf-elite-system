@@ -1,54 +1,44 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Calculadora</title>
-  <style>
-    html,body{height:100%;margin:0}
-    .top{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#0b1220;color:#fff;font-family:Arial}
-    .top button{border:0;border-radius:10px;padding:8px 12px;background:#22c55e;color:#06110a;font-weight:bold;cursor:pointer}
-    iframe{width:100%;height:calc(100% - 54px);border:0}
-  </style>
-</head>
-<body>
-  <div class="top">
-    <div>Calculadora</div>
-    <button onclick="sair()">Sair</button>
-  </div>
+<meta charset="UTF-8">
+<title>Calculadora</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <iframe id="frame" src="about:blank"></iframe>
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:#fff;
+  font-family:Arial, sans-serif;
+  padding:20px;
+}
+</style>
+</head>
+
+<body>
+<h1>Calculadora liberada ✅</h1>
+<p>Se você está vendo isso, o acesso foi validado.</p>
 
 <script>
-const API_URL = "https://SEU-WORKER.workers.dev"; // <-- TROQUE
-const CALC_URL = "https://lime-bison-235047.hostingersite.com/"; // sua calculadora real
-
-async function verificar(){
+(async ()=>{
   const token = localStorage.getItem("token");
   if(!token){
     location.href = "index.html";
     return;
   }
 
-  const res = await fetch(API_URL + "/verify", {
-    headers:{ "Authorization":"Bearer " + token }
-  });
+  const res = await fetch(
+    "https://rough-base-6eb1.jlucasandradee.workers.dev/verify",
+    { headers:{ "Authorization":"Bearer "+token } }
+  );
 
-  if(!res.ok){
+  const data = await res.json();
+  if(!data.ok){
     localStorage.removeItem("token");
     location.href = "index.html";
-    return;
   }
-
-  document.getElementById("frame").src = CALC_URL;
-}
-
-function sair(){
-  localStorage.removeItem("token");
-  location.href = "index.html";
-}
-
-verificar();
+})();
 </script>
 </body>
 </html>
