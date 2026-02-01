@@ -1,198 +1,40 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>MacroPeso Inteligente • Acesso</title>
-
-  <!-- Favicons (se você já subiu os arquivos no repositório) -->
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculadora - MacroPeso</title>
   <style>
-    :root{
-      --bg:#050707; --card:#0f1a17; --stroke:#2a3b35;
-      --text:#e9f2ef; --muted:#b8c7c1;
-      --green:#19e36f; --green2:#10b85a; --red:#ff3b3b;
-    }
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    body{
-      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-      background: radial-gradient(1200px 800px at 20% 10%, #123b2b 0%, transparent 55%),
-                  radial-gradient(1000px 700px at 80% 40%, #0f2a22 0%, transparent 60%),
-                  linear-gradient(180deg,#050707,#0b1412);
-      color:var(--text); padding:24px;
-    }
-    .card{
-      width:min(560px,100%);
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, #0f1a17, #0b1311);
-      border-radius:18px;
-      padding:22px;
-      box-shadow:0 20px 80px rgba(0,0,0,.45);
-      position:relative;
-      z-index:10; /* garante que nada fica por cima */
-    }
-    h1{margin:0 0 6px; font-size:34px}
-    p{margin:0 0 16px; color:var(--muted); line-height:1.35}
-    label{display:block; margin:12px 0 8px; color:var(--muted); font-weight:800}
-    input{
-      width:100%; border:1px solid #2d4039; background:#0a1210; color:var(--text);
-      padding:14px; border-radius:12px; font-size:16px; outline:none;
-    }
-    input:focus{border-color:rgba(25,227,111,.7); box-shadow:0 0 0 3px rgba(25,227,111,.15)}
-    .row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
-    button{
-      border:none; cursor:pointer; padding:14px 18px; border-radius:12px;
-      font-weight:900; letter-spacing:.2px;
-    }
-    .primary{background:linear-gradient(180deg,var(--green),var(--green2)); color:#06120c; min-width:220px}
-    .ghost{background:#16231f; color:var(--text); border:1px solid #2a3b35}
-    .status{margin-top:12px; font-weight:900}
-    .ok{color:var(--green)} .err{color:var(--red)}
-    .foot{margin-top:14px; color:#7f948c; font-size:13px}
-
-    /* ✅ LOGO sem bloquear cliques */
-    .logo{
-      display:block;
-      margin:0 auto 12px auto;
-      width:92px;
-      height:92px;
-      object-fit:contain;
-      pointer-events:none; /* CRÍTICO: não bloqueia botão/input */
-      user-select:none;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
-    }
+    html,body{height:100%;margin:0}
+    .topbar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#0f2f2a;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    .topbar span{font-size:14px;opacity:.95}
+    .topbar button{border:0;border-radius:10px;padding:8px 12px;background:#ffffff;color:#0f2f2a;cursor:pointer}
+    iframe{width:100%;height:calc(100% - 54px);border:0}
   </style>
 </head>
-
 <body>
-  <div class="card">
-    <!-- ✅ COLOQUE SUA LOGO AQUI (pode deixar vazio) -->
-    <img id="logo" class="logo" alt="MacroPeso Inteligente" />
-
-    <h1>MacroPeso Inteligente</h1>
-    <p>
-      Digite seu <b>e-mail</b> (compradores) <b>OU</b> seu <b>código</b> (convidados).<br>
-      Exemplo de código: <b>123456</b>
-    </p>
-
-    <label for="input">E-mail ou Código</label>
-    <input id="input" autocomplete="off" placeholder="ex: seuemail@gmail.com | ex: 123456"/>
-
-    <div class="row">
-      <button class="primary" id="btnEnter">Entrar</button>
-      <button class="ghost" id="btnLogout" type="button">Sair (teste)</button>
-    </div>
-
-    <div class="status" id="status"></div>
-    <div class="foot">© João Frutuoso</div>
+  <div class="topbar">
+    <span id="who"></span>
+    <button onclick="logout()">Trocar e-mail</button>
   </div>
 
-<script>
-  // ✅ Seu Worker (já com /access)
-  const API_URL = "https://rough-base-6eb1.jlucasandradeee.workers.dev/access";
+  <iframe
+    src="https://lime-bison-235047.hostingersite.com"
+    referrerpolicy="no-referrer"
+    allow="clipboard-read; clipboard-write"
+  ></iframe>
 
-  // ✅ Sua calculadora
-  const REDIRECT_URL = "https://macropesointeligente.my.canva.site/macropesointeligente";
-
-  // ✅ Logo (opcional). Se você subir "logo.png" no mesmo repositório, troque para "logo.png"
-  const LOGO_URL = "logo.png"; // pode trocar por um link completo; ou deixar "" para esconder
-
-  // ✅ Sessão só na aba (fechou → pede de novo)
-  const SESSION_OK = "mp_ok_session";
-  const SESSION_DEVICE = "mp_device_session";
-
-  const $input = document.getElementById("input");
-  const $status = document.getElementById("status");
-  const $btnEnter = document.getElementById("btnEnter");
-  const $btnLogout = document.getElementById("btnLogout");
-  const $logo = document.getElementById("logo");
-
-  function setStatus(msg, type){
-    $status.className = "status " + (type || "");
-    $status.textContent = msg || "";
-  }
-
-  function getDeviceId(){
-    let id = sessionStorage.getItem(SESSION_DEVICE);
-    if (!id) {
-      id = (crypto.randomUUID ? crypto.randomUUID() : ("dev-" + Math.random().toString(16).slice(2) + Date.now()));
-      sessionStorage.setItem(SESSION_DEVICE, id);
+  <script>
+    const email = localStorage.getItem('MP_EMAIL') || '';
+    document.getElementById('who').textContent = email ? `Logado: ${email}` : 'Não logado';
+    if(!email){
+      // se entrou direto sem e-mail, volta pro login
+      window.location.href = 'index.html';
     }
-    return id;
-  }
-
-  function go(){
-    window.location.href = REDIRECT_URL;
-  }
-
-  // ✅ Logo sem quebrar nada
-  if (!LOGO_URL) {
-    $logo.style.display = "none";
-  } else {
-    $logo.src = LOGO_URL;
-    $logo.onerror = () => { $logo.style.display = "none"; };
-  }
-
-  // ✅ NUNCA auto-entra de forma permanente.
-  // Só entra se a aba ainda estiver aberta e já validou.
-  if (sessionStorage.getItem(SESSION_OK) === "1") {
-    go();
-  }
-
-  // Botão Sair (para você testar sempre)
-  $btnLogout.addEventListener("click", () => {
-    sessionStorage.removeItem(SESSION_OK);
-    setStatus("Sessão limpa. Agora ele vai pedir de novo.", "ok");
-    $input.value = "";
-    $input.focus();
-  });
-
-  async function submit(){
-    const input = ($input.value || "").trim();
-    if(!input){
-      setStatus("Digite e-mail ou código.", "err");
-      return;
+    function logout(){
+      localStorage.removeItem('MP_EMAIL');
+      window.location.href = 'index.html';
     }
-
-    setStatus("Verificando…", "");
-    $btnEnter.disabled = true;
-
-    try{
-      const deviceId = getDeviceId();
-
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ input, deviceId })
-      });
-
-      const data = await res.json().catch(()=>({}));
-
-      if (!res.ok || !data.ok){
-        setStatus(data.message || "Acesso negado.", "err");
-        $btnEnter.disabled = false;
-        return;
-      }
-
-      // ✅ ok
-      sessionStorage.setItem(SESSION_OK, "1");
-      setStatus("Acesso liberado. Entrando…", "ok");
-      setTimeout(go, 200);
-
-    }catch(e){
-      setStatus("Erro de conexão. Tente novamente.", "err");
-      $btnEnter.disabled = false;
-    }
-  }
-
-  document.getElementById("btnEnter").addEventListener("click", submit);
-  $input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") submit();
-  });
-</script>
+  </script>
 </body>
 </html>
