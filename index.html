@@ -2,114 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Calculadora MacroPeso</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f5132;
-      margin: 0;
-      padding: 0;
-      color: #fff;
-    }
-
-    .container {
-      max-width: 420px;
-      margin: 40px auto;
-      background: #ffffff;
-      color: #000;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.3);
-    }
-
-    h1 {
-      text-align: center;
-      color: #0f5132;
-    }
-
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 20px;
-      padding: 12px;
-      background: #0f5132;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #198754;
-    }
-
-    .resultado {
-      margin-top: 20px;
-      padding: 15px;
-      background: #e9f7ef;
-      border-radius: 8px;
-      display: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-
 <body>
 
-  <div class="container">
-    <h1>Calculadora MacroPeso</h1>
-
-    <label>Alimento</label>
-    <select id="alimento">
-      <option value="frango">Frango</option>
-      <option value="patinho">Patinho</option>
-    </select>
-
-    <label>Peso consumido (g)</label>
-    <input type="number" id="peso" placeholder="Ex: 200"/>
-
-    <button onclick="calcular()">Calcular</button>
-
-    <div class="resultado" id="resultado"></div>
-  </div>
-
-  <script>
-    function calcular() {
-      const alimento = document.getElementById("alimento").value;
-      const peso = Number(document.getElementById("peso").value);
-      const resultado = document.getElementById("resultado");
-
-      if (!peso || peso <= 0) {
-        alert("Digite um peso válido");
-        return;
-      }
-
-      let proteinaPor100g = alimento === "frango" ? 31 : 26;
-      let proteinaTotal = (proteinaPor100g / 100) * peso;
-
-      resultado.style.display = "block";
-      resultado.innerHTML = `
-        <strong>Resultado:</strong><br>
-        Proteína estimada: <b>${proteinaTotal.toFixed(1)} g</b>
-      `;
-    }
-  </script>
+  <!-- AQUI ENTRA SUA CALCULADORA REAL -->
+  <script src="app.js"></script>
 
 </body>
 </html>
