@@ -1,95 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Acesso</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>Entrar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #0b1220;
-      font-family: Arial, sans-serif;
-      color: #fff;
-    }
-    .box {
-      background: #0f1b33;
-      padding: 24px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.4);
-    }
-    h2 {
-      margin-top: 0;
-      text-align: center;
-    }
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.15);
-      background: #0b1326;
-      color: #fff;
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      background: #22c55e;
-      color: #06110a;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .msg {
-      margin-top: 10px;
-      text-align: center;
-      color: #fca5a5;
-      font-size: 14px;
-    }
-  </style>
+<style>
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0b1220;
+  font-family:Arial, sans-serif;
+}
+.box{
+  background:#0f1b33;
+  padding:26px;
+  border-radius:18px;
+  width:100%;
+  max-width:360px;
+  color:#fff;
+  box-shadow:0 20px 40px rgba(0,0,0,.45);
+}
+h2{
+  margin-top:0;
+  text-align:center;
+}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.15);
+  background:#0b1326;
+  color:#fff;
+  font-size:16px;
+  margin-bottom:14px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  background:#22c55e;
+  color:#06110a;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.msg{
+  margin-top:10px;
+  text-align:center;
+  color:#fca5a5;
+  font-size:14px;
+}
+</style>
 </head>
 
 <body>
-  <div class="box">
-    <h2>Entrar</h2>
+<div class="box">
+  <h2>Entrar</h2>
 
-    <input
-      id="email"
-      type="email"
-      placeholder="Digite seu e-mail"
-      autocomplete="email"
-    />
+  <input id="email" type="email" placeholder="Digite seu e-mail">
 
-    <button onclick="entrar()">Entrar</button>
+  <button onclick="entrar()">Entrar</button>
 
-    <div class="msg" id="msg"></div>
-  </div>
+  <div class="msg" id="msg"></div>
+</div>
 
 <script>
-  const API_URL = "https://SEU-WORKER.workers.dev"; // 🔴 TROQUE AQUI
+async function entrar(){
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const msg = document.getElementById("msg");
+  msg.textContent = "";
 
-  async function entrar() {
-    const email = document.getElementById("email").value.trim().toLowerCase();
-    const msg = document.getElementById("msg");
-    msg.textContent = "";
+  if(!email || !email.includes("@")){
+    msg.textContent = "Digite um e-mail válido";
+    return;
+  }
 
-    if (!email || !email.includes("@")) {
-      msg.textContent = "Digite um e-mail válido";
+  try{
+    const res = await fetch("https://rough-base-6eb1.jlucasandradee.workers.dev/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if(!data.ok){
+      msg.textContent = data.error || "Acesso negado";
       return;
     }
 
-    try {
-      const res = await fetch(API_URL + "/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "paid",
+    localStorage.setItem("token", data.token);
+    window.location.href = "app.html";
+
+  }catch(e){
+    msg.textContent = "Erro de conexão";
+  }
+}
+</script>
+</body>
+</html>
