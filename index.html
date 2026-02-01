@@ -1,113 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
   <title>Acesso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
-    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b1220;color:#fff;font-family:Arial}
-    .card{width:100%;max-width:420px;background:#0f1b33;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    h2{margin:0 0 8px;font-size:18px}
-    p{margin:0 0 14px;opacity:.85;font-size:13px;line-height:1.35}
-    .tabs{display:flex;gap:8px;margin-bottom:12px}
-    .tab{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0b1326;color:#fff;cursor:pointer}
-    .tab.active{background:#22c55e;color:#06110a;border-color:transparent;font-weight:bold}
-    input,button{width:100%;padding:12px;border-radius:12px;border:none;font-size:16px}
-    input{background:#0b1326;color:#fff;border:1px solid rgba(255,255,255,.12)}
-    button{background:#22c55e;color:#06110a;font-weight:bold;margin-top:10px;cursor:pointer}
-    .msg{margin-top:10px;color:#fca5a5;font-size:13px}
-    .hint{margin-top:10px;opacity:.75;font-size:12px}
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0b1220;
+      font-family: Arial, sans-serif;
+      color: #fff;
+    }
+    .box {
+      background: #0f1b33;
+      padding: 24px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: #0b1326;
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: #22c55e;
+      color: #06110a;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .msg {
+      margin-top: 10px;
+      text-align: center;
+      color: #fca5a5;
+      font-size: 14px;
+    }
   </style>
 </head>
+
 <body>
-  <div class="card">
+  <div class="box">
     <h2>Entrar</h2>
-    <p>Escolha o tipo de acesso.</p>
 
-    <div class="tabs">
-      <button class="tab active" id="t-blogger" onclick="setMode('blogger')">Blogueiro</button>
-      <button class="tab" id="t-paid" onclick="setMode('paid')">Cliente</button>
-      <button class="tab" id="t-owner" onclick="setMode('owner')">Dono</button>
-    </div>
+    <input
+      id="email"
+      type="email"
+      placeholder="Digite seu e-mail"
+      autocomplete="email"
+    />
 
-    <div id="blogger">
-      <input id="code" placeholder="Código" />
-      <div class="hint">Blogueiros entram só com o código.</div>
-    </div>
+    <button onclick="entrar()">Entrar</button>
 
-    <div id="paid" style="display:none">
-      <input id="paidEmail" placeholder="E-mail da compra" />
-      <div class="hint">Clientes entram com o e-mail liberado pela compra.</div>
-    </div>
-
-    <div id="owner" style="display:none">
-      <input id="ownerEmail" placeholder="E-mail do dono" />
-      <div class="hint">Somente os 2 donos têm acesso eterno por e-mail.</div>
-    </div>
-
-    <button onclick="login()">Entrar</button>
     <div class="msg" id="msg"></div>
   </div>
 
 <script>
-const API_URL = "https://SEU-WORKER.workers.dev"; // <-- TROQUE
-let MODE = "blogger";
+  const API_URL = "https://SEU-WORKER.workers.dev"; // 🔴 TROQUE AQUI
 
-function setMode(m){
-  MODE = m;
-  document.getElementById("blogger").style.display = (m==="blogger") ? "block" : "none";
-  document.getElementById("paid").style.display = (m==="paid") ? "block" : "none";
-  document.getElementById("owner").style.display = (m==="owner") ? "block" : "none";
+  async function entrar() {
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const msg = document.getElementById("msg");
+    msg.textContent = "";
 
-  document.getElementById("t-blogger").classList.toggle("active", m==="blogger");
-  document.getElementById("t-paid").classList.toggle("active", m==="paid");
-  document.getElementById("t-owner").classList.toggle("active", m==="owner");
+    if (!email || !email.includes("@")) {
+      msg.textContent = "Digite um e-mail válido";
+      return;
+    }
 
-  document.getElementById("msg").textContent = "";
-}
-
-function getDeviceId(){
-  let id = localStorage.getItem("deviceId");
-  if(!id){
-    id = crypto.randomUUID();
-    localStorage.setItem("deviceId", id);
-  }
-  return id;
-}
-
-async function login(){
-  const msg = document.getElementById("msg");
-  msg.textContent = "";
-
-  let payload = { mode: MODE };
-
-  if(MODE === "blogger"){
-    payload.code = document.getElementById("code").value.trim();
-    payload.deviceId = getDeviceId();
-  }
-  if(MODE === "paid"){
-    payload.email = document.getElementById("paidEmail").value.trim().toLowerCase();
-  }
-  if(MODE === "owner"){
-    payload.email = document.getElementById("ownerEmail").value.trim().toLowerCase();
-  }
-
-  const res = await fetch(API_URL + "/login", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  const data = await res.json();
-
-  if(!data.ok){
-    msg.textContent = data.error;
-    return;
-  }
-
-  localStorage.setItem("token", data.token);
-  location.href = "app.html";
-}
-</script>
-</body>
-</html>
+    try {
+      const res = await fetch(API_URL + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "paid",
